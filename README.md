@@ -1,4 +1,3 @@
-````markdown
 # CourseKit 📚
 
 CourseKit is a lightweight mini LMS for language teachers and course creators.
