@@ -1,0 +1,172 @@
+/* Main page background */
+    .stApp {
+        background: linear-gradient(135deg, #f8f7ff 0%, #ffffff 45%, #f5fbff 100%);
+    }
+
+    /* Main content width and spacing */s
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1250px;
+    }
+
+    /* Headings */
+    h1 {
+        font-size: 4rem !important;
+        font-weight: 800 !important;
+        color: #2f3142 !important;
+        letter-spacing: -1px;
+    }
+
+    h2, h3 {
+        color: #34364a !important;
+        font-weight: 750 !important;
+    }
+
+    .hero-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f1efff 100%);
+        border: 1px solid #e7e3ff;
+        border-radius: 28px;
+        padding: 2rem 2.4rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 18px 40px rgba(80, 72, 120, 0.10);
+    }
+    
+    .eyebrow {
+        color: #6c63ff;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+    }
+    
+    .hero-text {
+        color: #5f6070;
+        font-size: 1.1rem;
+        max-width: 760px;
+        line-height: 1.6;
+    }
+
+    .hero-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+    
+    .hero-main {
+        max-width: 760px;
+    }
+    
+    .hero-features {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        min-width: 220px;
+    }
+    
+    .feature-pill {
+        background: #ffffff;
+        border: 1px solid #e7e3ff;
+        border-radius: 999px;
+        padding: 0.65rem 1rem;
+        color: #3b2f63;
+        font-weight: 700;
+        box-shadow: 0 8px 18px rgba(80, 72, 120, 0.06);
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: #f1f0ff;
+        border-right: 1px solid #e2e0f5;
+    }
+
+    section[data-testid="stSidebar"] h1 {
+        font-size: 2rem !important;
+        color: #3b2f63 !important;
+    }
+
+    /* Sidebar navigation text */
+    section[data-testid="stSidebar"] label {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: #34364a !important;
+    }
+
+    /* Sidebar radio group spacing */
+    section[data-testid="stSidebar"] div[role="radiogroup"] {
+        gap: 0.35rem;
+    }
+    
+    /* Sidebar radio options */
+    section[data-testid="stSidebar"] div[role="radiogroup"] label {
+        font-size: 1.05rem !important;
+        font-weight: 650 !important;
+    }
+    
+    /* Sidebar title */
+    section[data-testid="stSidebar"] h1 {
+        font-size: 2.1rem !important;
+        font-weight: 800 !important;
+        color: #3b2f63 !important;
+    }
+
+    /* Metrics */
+    div[data-testid="stMetric"] {
+        background: #ffffff;
+        padding: 1.2rem;
+        border-radius: 18px;
+        border: 1px solid #e8e6f3;
+        box-shadow: 0 8px 24px rgba(80, 72, 120, 0.08);
+    }
+
+    div[data-testid="stMetric"] label {
+        color: #6d6a7c !important;
+        font-weight: 600;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #3b2f63 !important;
+        font-weight: 800;
+    }
+
+    /* Forms */
+    div[data-testid="stForm"] {
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 18px;
+        border: 1px solid #e8e6f3;
+        box-shadow: 0 8px 24px rgba(80, 72, 120, 0.06);
+    }
+
+    /* Expanders */
+    details {
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        border: 1px solid #e8e6f3 !important;
+        box-shadow: 0 6px 18px rgba(80, 72, 120, 0.05);
+    }
+
+    /* Buttons */
+    .stButton > button {
+        border-radius: 12px;
+        border: 1px solid #6c63ff;
+        background: #6c63ff;
+        color: white;
+        font-weight: 700;
+        padding: 0.55rem 1.1rem;
+    }
+
+    .stButton > button:hover {
+        border: 1px solid #584de0;
+        background: #584de0;
+        color: white;
+    }
+
+    /* Dataframes */
+    div[data-testid="stDataFrame"] {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 6px 18px rgba(80, 72, 120, 0.04);
+    }

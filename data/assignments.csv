@@ -1,0 +1,2 @@
+id,student_id,course_id,lesson_id,homework,status,evaluation,comments
+1,1,2,2,Write examples with new words.,completed,good,Well done!
