@@ -107,5 +107,3 @@ Screenshots will be added after deployment.
 ## 👩‍💻 Author
 
 Created by Iana Korshunova as an EdTech / Python / Streamlit portfolio project.
-
-````
