@@ -746,7 +746,24 @@ elif page == "Courses":
     st.header("Courses")
     
     st.subheader("Course list")
-    st.dataframe(courses, use_container_width=True, hide_index=True)
+
+    courses_view = courses.copy()
+
+    courses_view = courses_view[
+        ["title", "target_language", "instruction_language", "level"]
+    ]
+
+    st.dataframe(
+        courses_view,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "title": st.column_config.TextColumn("Title", width="large"),
+            "target_language": st.column_config.TextColumn("Target language", width="medium"),
+            "instruction_language": st.column_config.TextColumn("Taught in", width="medium"),
+            "level": st.column_config.TextColumn("Level", width="small"),
+        }
+    )
     
     st.subheader("Add a new course")
     
