@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+from io import BytesIO
+import zipfile
 
 DATA_DIR = Path("data")
 STUDENTS_FILE = DATA_DIR / "students.csv"
@@ -29,6 +31,16 @@ def student_label(row):
     level = display_value(row["level"], "Not specified")
 
     return f"{row['id']} — {row['name']} ({target_language} {level})"
+
+def create_data_backup():
+    backup_buffer = BytesIO()
+
+    with zipfile.ZipFile(backup_buffer, "w", zipfile.ZIP_DEFLATED) as backup_zip:
+        for csv_file in DATA_DIR.glob("*.csv"):
+            backup_zip.write(csv_file, arcname=f"data/{csv_file.name}")
+
+    backup_buffer.seek(0)
+    return backup_buffer
 
 st.markdown(
 """
@@ -216,6 +228,18 @@ if page == "Dashboard":
         col1.metric("Not started", int(progress_status_counts.get("not started", 0)))
         col2.metric("In progress", int(progress_status_counts.get("in progress", 0)))
         col3.metric("Completed", int(progress_status_counts.get("completed", 0)))
+    
+    st.subheader("Data backup")
+    st.write("Download all CSV data files as a backup before making larger changes.")
+
+    backup_file = create_data_backup()
+
+    st.download_button(
+        label="Download data backup",
+        data=backup_file,
+        file_name="coursekit_data_backup.zip",
+        mime="application/zip"
+    )
 
 elif page == "Students":
     
