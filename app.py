@@ -230,7 +230,10 @@ if page == "Dashboard":
         col3.metric("Completed", int(progress_status_counts.get("completed", 0)))
     
     st.subheader("Data backup")
-    st.write("Download all CSV data files as a backup before making larger changes.")
+    st.write(
+    "Download all CSV data files as a backup. "
+    "CSV files can be opened in Excel, Google Sheets, Numbers, or any text editor."
+    )
 
     backup_file = create_data_backup()
 
