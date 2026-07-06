@@ -796,9 +796,15 @@ elif page == "Courses":
     
     with st.form("add_course_form"):
         title = st.text_input("Course title")
+
         course_language = st.selectbox(
-        "Course language",
-        ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
+            "Target language",
+            ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
+        )
+
+        instruction_language = st.selectbox(
+            "Instruction language",
+            ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
         )
         course_level = st.selectbox(
         "Course level",
@@ -816,25 +822,26 @@ elif page == "Courses":
                 if courses.empty:
                     new_course_id = 1
                 else:
-                    new_course_id = courses["id"].max() + 1
-                    
-                    new_course = {
-                        "id": new_course_id,
-                        "title": title,
-                        "language": course_language,
-                        "level": course_level,
-                        "description": description,
-                    }
-                    
-                    courses = pd.concat(
-                        [courses, pd.DataFrame([new_course])],
-                        ignore_index=True
-                    )
-                    
-                    courses.to_csv(COURSES_FILE, index=False)
-                    
-                    st.success("Course added successfully!")
-                    st.rerun()
+                    new_course_id = int(courses["id"].max()) + 1
+
+                new_course = {
+                    "id": new_course_id,
+                    "title": title,
+                    "target_language": course_language,
+                    "instruction_language": instruction_language,
+                    "level": course_level,
+                    "description": description,
+                }
+
+                courses = pd.concat(
+                    [courses, pd.DataFrame([new_course])],
+                    ignore_index=True
+                )
+
+                courses.to_csv(COURSES_FILE, index=False)
+
+                st.success("Course added successfully!")
+                st.rerun()
     
     st.subheader("Edit course")
 
