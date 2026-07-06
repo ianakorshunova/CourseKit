@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 from io import BytesIO
 import zipfile
+from supabase import create_client
 
 DATA_DIR = Path("data")
 STUDENTS_FILE = DATA_DIR / "students.csv"
@@ -11,6 +12,31 @@ LESSONS_FILE = DATA_DIR / "lessons.csv"
 ASSIGNMENTS_FILE = DATA_DIR / "assignments.csv"
 STUDENT_SKILLS_FILE = DATA_DIR / "student_skills.csv"
 PROGRESS_FILE = DATA_DIR / "progress.csv"
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_ANON_KEY = st.secrets["SUPABASE_ANON_KEY"]
+
+supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+SKILL_OPTIONS = [
+    "Listening",
+    "Reading",
+    "Speaking",
+    "Writing",
+    "Grammar",
+    "Vocabulary",
+    "Pronunciation",
+]
+
+
+def parse_skills_focus(value):
+    if pd.isna(value) or str(value).strip() in ["", "[]", "None", "nan"]:
+        return []
+
+    if isinstance(value, list):
+        return [skill for skill in value if skill in SKILL_OPTIONS]
+
+    skills = [skill.strip() for skill in str(value).split(",")]
+    return [skill for skill in skills if skill in SKILL_OPTIONS]
 
 st.set_page_config(page_title="CourseKit", page_icon="📚")
 
@@ -67,12 +93,75 @@ st.markdown(
 unsafe_allow_html=True
 )
 
-students = pd.read_csv(STUDENTS_FILE)
-courses = pd.read_csv(COURSES_FILE)
-lessons = pd.read_csv(LESSONS_FILE)
-assignments = pd.read_csv(ASSIGNMENTS_FILE)
-student_skills = pd.read_csv(STUDENT_SKILLS_FILE)
-progress = pd.read_csv(PROGRESS_FILE)
+# students = pd.read_csv(STUDENTS_FILE)
+# courses = pd.read_csv(COURSES_FILE)
+# lessons = pd.read_csv(LESSONS_FILE)
+# assignments = pd.read_csv(ASSIGNMENTS_FILE)
+# student_skills = pd.read_csv(STUDENT_SKILLS_FILE)
+# progress = pd.read_csv(PROGRESS_FILE)
+
+TABLE_COLUMNS = {
+    "students": ["id", "name", "target_language", "level", "status", "notes"],
+    "courses": ["id", "title", "target_language", "instruction_language", "level", "description"],
+    "lessons": [
+        "id",
+        "course_id",
+        "title",
+        "lesson_date",
+        "start_time",
+        "duration_minutes",
+        "lesson_goal",
+        "skills_focus",
+        "materials",
+        "materials_url",
+        "homework_template",
+        "homework_url",
+        "is_archived",
+    ],
+    "assignments": [
+        "id",
+        "student_id",
+        "course_id",
+        "lesson_id",
+        "homework",
+        "status",
+        "evaluation",
+        "comments",
+    ],
+    "progress": [
+        "id",
+        "student_id",
+        "course_id",
+        "lesson_id",
+        "status",
+        "teacher_comment",
+    ],
+    "student_skills": [
+        "id",
+        "student_id",
+        "listening",
+        "reading",
+        "speaking",
+        "writing",
+        "grammar",
+        "vocabulary",
+        "comments",
+    ],
+}
+
+
+def load_table(table_name):
+    response = supabase.table(table_name).select("*").execute()
+    data = response.data or []
+    return pd.DataFrame(data, columns=TABLE_COLUMNS[table_name])
+
+
+students = load_table("students")
+courses = load_table("courses")
+lessons = load_table("lessons")
+assignments = load_table("assignments")
+progress = load_table("progress")
+student_skills = load_table("student_skills")
 
 if "is_archived" not in lessons.columns:
     lessons["is_archived"] = False
@@ -191,6 +280,11 @@ page = st.sidebar.radio(
 )
 
 if page == "Dashboard":
+    try:
+        test_response = supabase.table("courses").select("*").execute()
+        st.success("Supabase connected successfully.")
+    except Exception as error:
+        st.error(f"Supabase connection failed: {error}")
     st.subheader("Dashboard")
 
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -328,7 +422,7 @@ elif page == "Students":
 
     st.dataframe(
         students_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "name": st.column_config.TextColumn("Name", width="medium"),
@@ -352,29 +446,18 @@ elif page == "Students":
         
         if submitted:
             if name.strip() == "":
-                st.error("Please enter the student's name.")
+                st.error("Please enter the student name.")
             else:
-                if students.empty:
-                    new_id = 1
-                else:
-                    new_id = students["id"].max() + 1
-                    
                 new_student = {
-                    "id": new_id,
                     "name": name,
                     "target_language": language,
                     "level": level,
                     "status": status,
                     "notes": notes,
                 }
-                
-                students = pd.concat(
-                    [students, pd.DataFrame([new_student])],
-                    ignore_index=True
-                )
-                
-                students.to_csv(STUDENTS_FILE, index=False)
-                
+
+                supabase.table("students").insert(new_student).execute()
+
                 st.success("Student added successfully!")
                 st.rerun()
 
@@ -646,7 +729,7 @@ elif page == "Student Profile":
 
             st.dataframe(
                 student_assignments_view,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 column_config={
                     "lesson": st.column_config.TextColumn("Lesson", width="large"),
@@ -747,7 +830,7 @@ elif page == "Student Profile":
 
                 st.dataframe(
                     student_progress_view[["lesson", "status"]],
-                    use_container_width=True,
+                    width="stretch",
                     hide_index=True,
                     column_config={
                         "lesson": st.column_config.TextColumn("Lesson", width="large"),
@@ -782,7 +865,7 @@ elif page == "Courses":
 
     st.dataframe(
         courses_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "title": st.column_config.TextColumn("Title", width="large"),
@@ -819,13 +902,7 @@ elif page == "Courses":
             if title.strip() == "":
                 st.error("Please enter the course title.")
             else:
-                if courses.empty:
-                    new_course_id = 1
-                else:
-                    new_course_id = int(courses["id"].max()) + 1
-
                 new_course = {
-                    "id": new_course_id,
                     "title": title,
                     "target_language": course_language,
                     "instruction_language": instruction_language,
@@ -833,12 +910,7 @@ elif page == "Courses":
                     "description": description,
                 }
 
-                courses = pd.concat(
-                    [courses, pd.DataFrame([new_course])],
-                    ignore_index=True
-                )
-
-                courses.to_csv(COURSES_FILE, index=False)
+                supabase.table("courses").insert(new_course).execute()
 
                 st.success("Course added successfully!")
                 st.rerun()
@@ -964,7 +1036,7 @@ elif page == "Lessons":
     
     st.dataframe(
         lessons_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "course": st.column_config.TextColumn("Course", width="medium"),
@@ -1046,26 +1118,25 @@ elif page == "Lessons":
                 if title.strip() == "":
                     st.error("Please enter the lesson title.")
                 else:
-                    if lessons.empty:
-                        new_lesson_id = 1
-                    else:
-                        new_lesson_id = lessons["id"].max() + 1
-
                     new_lesson = {
-                        "id": new_lesson_id,
-                        "course_id": course_options[selected_course],
+                        "course_id": int(str(selected_course).split(" — ")[0]),
                         "title": title,
-                        "lesson_date": lesson_date.isoformat(),
-                        "start_time": start_time.strftime("%H:%M"),
+                        "lesson_date": str(lesson_date),
+                        "start_time": str(start_time),
                         "duration_minutes": int(duration_minutes),
                         "lesson_goal": lesson_goal,
-                        "skills_focus": ", ".join(skills_focus),
+                        "skills_focus": ", ".join(skills_focus) if isinstance(skills_focus, list) else skills_focus,
                         "materials": materials,
                         "materials_url": materials_url,
                         "homework_template": homework_template,
                         "homework_url": homework_url,
                         "is_archived": False,
                     }
+
+                    supabase.table("lessons").insert(new_lesson).execute()
+
+                    st.success("Lesson added successfully!")
+                    st.rerun()
                     
                     lessons = pd.concat(
                         [lessons, pd.DataFrame([new_lesson])],
@@ -1137,14 +1208,23 @@ elif page == "Lessons":
                 value=lesson_row["lesson_goal"]
             )
 
+            skill_options = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
+
+            current_skills_focus = lesson_row["skills_focus"]
+
+            if pd.isna(current_skills_focus) or str(current_skills_focus).strip() in ["", "[]", "None", "nan"]:
+                current_skills_focus = []
+            else:
+                current_skills_focus = [
+                    skill.strip()
+                    for skill in str(current_skills_focus).split(",")
+                    if skill.strip() in skill_options
+                ]
+
             edited_skills_focus = st.multiselect(
                 "Skills focus",
-                ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"],
-                default=[
-                    skill.strip()
-                    for skill in str(lesson_row["skills_focus"]).split(",")
-                    if skill.strip()
-                ]
+                skill_options,
+                default=current_skills_focus
             )
 
             edited_materials = st.text_area(
@@ -1296,7 +1376,7 @@ elif page == "Lessons":
 
         st.dataframe(
             archived_lessons_view,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             column_config={
                 "course": st.column_config.TextColumn("Course", width="medium"),
@@ -1372,7 +1452,7 @@ elif page == "Assignments":
     
     st.dataframe(
         assignments_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "student": st.column_config.TextColumn("Student", width="medium"),
@@ -1473,35 +1553,56 @@ elif page == "Assignments":
                 
             assignment_submitted = st.form_submit_button("Add assignment")
                 
+            # if assignment_submitted:
+            #     if selected_lesson is None:
+            #         st.error("Please add a lesson for this course before creating an assignment.")
+            #     elif homework.strip() == "":
+            #         st.error("Please enter the homework task.")
+            #     else:
+            #         if assignments.empty:
+            #             new_assignment_id = 1
+            #         else:
+            #             new_assignment_id = int(assignments["id"].max()) + 1
+                        
+            #         new_assignment = {
+            #             "id": new_assignment_id,
+            #             "student_id": student_options[selected_student],
+            #             "course_id": selected_course_id,
+            #             "lesson_id": lesson_options[selected_lesson],
+            #             "homework": homework,
+            #             "status": status,
+            #             "evaluation": evaluation,
+            #             "comments": comments,
+            #         }
+                        
+            #         assignments = pd.concat(
+            #             [assignments, pd.DataFrame([new_assignment])],
+            #             ignore_index=True
+            #         )
+                        
+            #         assignments.to_csv(ASSIGNMENTS_FILE, index=False)
+                        
+            #         st.success("Assignment added successfully!")
+            #         st.rerun()
+
             if assignment_submitted:
                 if selected_lesson is None:
                     st.error("Please add a lesson for this course before creating an assignment.")
                 elif homework.strip() == "":
                     st.error("Please enter the homework task.")
                 else:
-                    if assignments.empty:
-                        new_assignment_id = 1
-                    else:
-                        new_assignment_id = int(assignments["id"].max()) + 1
-                        
                     new_assignment = {
-                        "id": new_assignment_id,
-                        "student_id": student_options[selected_student],
-                        "course_id": selected_course_id,
-                        "lesson_id": lesson_options[selected_lesson],
+                        "student_id": int(student_options[selected_student]),
+                        "course_id": int(selected_course_id),
+                        "lesson_id": int(lesson_options[selected_lesson]),
                         "homework": homework,
                         "status": status,
                         "evaluation": evaluation,
                         "comments": comments,
                     }
-                        
-                    assignments = pd.concat(
-                        [assignments, pd.DataFrame([new_assignment])],
-                        ignore_index=True
-                    )
-                        
-                    assignments.to_csv(ASSIGNMENTS_FILE, index=False)
-                        
+
+                    supabase.table("assignments").insert(new_assignment).execute()
+
                     st.success("Assignment added successfully!")
                     st.rerun()
 
@@ -1675,7 +1776,7 @@ elif page == "Progress":
     st.subheader("Progress overview")
     st.dataframe(
         progress_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "student": st.column_config.TextColumn("Student", width="medium"),
@@ -1778,28 +1879,17 @@ elif page == "Progress":
                 if selected_lesson is None:
                     st.error("Please add a lesson for this course before adding progress.")
                 else:
-                    if progress.empty:
-                        new_progress_id = 1
-                    else:
-                        new_progress_id = int(progress["id"].max()) + 1
-
                     new_progress = {
-                        "id": new_progress_id,
-                        "student_id": student_options[selected_student],
-                        "course_id": selected_course_id,
-                        "lesson_id": lesson_options[selected_lesson],
+                        "student_id": int(student_options[selected_student]),
+                        "course_id": int(selected_course_id),
+                        "lesson_id": int(lesson_options[selected_lesson]),
                         "status": status,
                         "teacher_comment": teacher_comment,
                     }
 
-                    progress = pd.concat(
-                        [progress, pd.DataFrame([new_progress])],
-                        ignore_index=True
-                    )
+                    supabase.table("progress").insert(new_progress).execute()
 
-                    progress.to_csv(PROGRESS_FILE, index=False)
-
-                    st.success("Progress record added successfully!")
+                    st.success("Progress added successfully!")
                     st.rerun()
     
     st.subheader("Edit progress record")
@@ -1930,7 +2020,7 @@ elif page == "Student Skills":
         st.subheader("Skills overview")
         st.dataframe(
             student_skills_view,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             column_config={
                 "student": st.column_config.TextColumn("Student", width="medium"),
@@ -2009,23 +2099,15 @@ elif page == "Student Skills":
             skills_submitted = st.form_submit_button("Add skills")
 
             if skills_submitted:
-                selected_student_id = student_options[selected_student]
-
-                existing_skill_record = student_skills[
-                    student_skills["student_id"].astype(int) == int(selected_student_id)
+                existing_skill = student_skills[
+                    student_skills["student_id"].astype(int) == int(student_options[selected_student])
                 ]
 
-                if not existing_skill_record.empty:
-                    st.error("This student already has a skills profile. Please edit the existing record instead.")
+                if not existing_skill.empty:
+                    st.error("This student already has a skills profile.")
                 else:
-                    if student_skills.empty:
-                        new_skill_id = 1
-                    else:
-                        new_skill_id = int(student_skills["id"].max()) + 1
-
                     new_skill = {
-                        "id": new_skill_id,
-                        "student_id": selected_student_id,
+                        "student_id": int(student_options[selected_student]),
                         "listening": listening,
                         "reading": reading,
                         "speaking": speaking,
@@ -2035,12 +2117,7 @@ elif page == "Student Skills":
                         "comments": comments,
                     }
 
-                    student_skills = pd.concat(
-                        [student_skills, pd.DataFrame([new_skill])],
-                        ignore_index=True
-                    )
-
-                    student_skills.to_csv(STUDENT_SKILLS_FILE, index=False)
+                    supabase.table("student_skills").insert(new_skill).execute()
 
                     st.success("Student skills added successfully!")
                     st.rerun()
