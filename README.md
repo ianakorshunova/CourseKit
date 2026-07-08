@@ -18,12 +18,12 @@ It helps manage students, courses, lessons, assignments, student skills, and lea
 - Lesson archive and restore workflow
 - Dashboard with key metrics and status overviews
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
 - Python
 - Streamlit
 - Pandas
-- CSV-based data storage
+- Supabase
 - Custom CSS
 
 ## 📁 Project Structure
@@ -35,13 +35,17 @@ CourseKit/
 ├── requirements.txt
 ├── .gitignore
 ├── README.md
-└── data/
-    ├── students.csv
-    ├── courses.csv
-    ├── lessons.csv
-    ├── assignments.csv
-    ├── progress.csv
-    └── student_skills.csv
+└── screenshots/ # planned screenshots for the deployed app
+    ├── dashboard.png
+    ├── courses.png
+    ├── students.png
+    ├── lessons.png
+    ├── assignments.png
+    ├── progress.png
+    └── student-skills.png
+```
+
+Data is stored in Supabase tables, not in local CSV files.
 ````
 
 ## 🚀 How to Run Locally
@@ -67,16 +71,20 @@ streamlit run app.py
 
 ## 📊 Data Model
 
-CourseKit uses CSV files as a lightweight database.
+CourseKit uses Supabase as its database backend.
 
-Main entities:
+The app stores courses, students, lessons, assignments, progress records, and student skill profiles in Supabase tables.
 
-* `students.csv` — student profiles
-* `courses.csv` — course information
-* `lessons.csv` — lesson plans, dates, resources, archive status
-* `assignments.csv` — homework and assignment tracking
-* `progress.csv` — student progress by course and lesson
-* `student_skills.csv` — skill profiles for each student
+Main tables:
+
+- `students` — student profiles, target language, level, status, and notes
+- `courses` — course information, target language, instruction language, level, and description
+- `lessons` — lesson plans, dates, start times, duration, materials, homework templates, and archive status
+- `assignments` — homework tasks, assignment status, evaluation, and teacher comments
+- `progress` — student progress by course and lesson
+- `student_skills` — skill profiles for each student: listening, reading, speaking, writing, grammar, vocabulary, and comments
+
+The current version uses demo data. Authentication and user-specific access are planned as future improvements.
 
 ## 🧪 Example Use Case
 
@@ -92,17 +100,16 @@ A language teacher can use CourseKit to:
 
 ## 🖼 Screenshots
 
-Screenshots will be added after deployment.
+Screenshots will be added soon.
 
 ## 🌱 Future Improvements
 
-* Student-facing homework submission
-* File uploads for lesson materials
-* Calendar view for scheduled lessons
-* Attendance tracking
-* Exportable student reports
-* Authentication and user accounts
-* Database migration from CSV to SQLite
+- Student-facing homework submission
+- File uploads for lesson materials
+- Calendar view for scheduled lessons
+- Attendance tracking
+- Exportable student reports
+- Authentication and user accounts
 
 ## 👩‍💻 Author
 
