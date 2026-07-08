@@ -1,17 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
-from io import BytesIO
-import zipfile
 from supabase import create_client
 
-DATA_DIR = Path("data")
-STUDENTS_FILE = DATA_DIR / "students.csv"
-COURSES_FILE = DATA_DIR / "courses.csv"
-LESSONS_FILE = DATA_DIR / "lessons.csv"
-ASSIGNMENTS_FILE = DATA_DIR / "assignments.csv"
-STUDENT_SKILLS_FILE = DATA_DIR / "student_skills.csv"
-PROGRESS_FILE = DATA_DIR / "progress.csv"
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_ANON_KEY = st.secrets["SUPABASE_ANON_KEY"]
 
@@ -58,16 +48,6 @@ def student_label(row):
 
     return f"{row['id']} — {row['name']} ({target_language} {level})"
 
-def create_data_backup():
-    backup_buffer = BytesIO()
-
-    with zipfile.ZipFile(backup_buffer, "w", zipfile.ZIP_DEFLATED) as backup_zip:
-        for csv_file in DATA_DIR.glob("*.csv"):
-            backup_zip.write(csv_file, arcname=f"data/{csv_file.name}")
-
-    backup_buffer.seek(0)
-    return backup_buffer
-
 st.markdown(
 """
 <div class="hero-card">
@@ -92,13 +72,6 @@ st.markdown(
 """,
 unsafe_allow_html=True
 )
-
-# students = pd.read_csv(STUDENTS_FILE)
-# courses = pd.read_csv(COURSES_FILE)
-# lessons = pd.read_csv(LESSONS_FILE)
-# assignments = pd.read_csv(ASSIGNMENTS_FILE)
-# student_skills = pd.read_csv(STUDENT_SKILLS_FILE)
-# progress = pd.read_csv(PROGRESS_FILE)
 
 TABLE_COLUMNS = {
     "students": ["id", "name", "target_language", "level", "status", "notes"],
@@ -280,11 +253,7 @@ page = st.sidebar.radio(
 )
 
 if page == "Dashboard":
-    try:
-        test_response = supabase.table("courses").select("*").execute()
-        st.success("Supabase connected successfully.")
-    except Exception as error:
-        st.error(f"Supabase connection failed: {error}")
+
     st.subheader("Dashboard")
 
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -322,21 +291,6 @@ if page == "Dashboard":
         col1.metric("Not started", int(progress_status_counts.get("not started", 0)))
         col2.metric("In progress", int(progress_status_counts.get("in progress", 0)))
         col3.metric("Completed", int(progress_status_counts.get("completed", 0)))
-    
-    st.subheader("Data backup")
-    st.write(
-    "Download all CSV data files as a backup. "
-    "CSV files can be opened in Excel, Google Sheets, Numbers, or any text editor."
-    )
-
-    backup_file = create_data_backup()
-
-    st.download_button(
-        label="Download data backup",
-        data=backup_file,
-        file_name="coursekit_data_backup.zip",
-        mime="application/zip"
-    )
 
 elif page == "Students":
     
@@ -530,37 +484,23 @@ elif page == "Students":
             )
 
             edit_student_submitted = st.form_submit_button("Save student changes")
-
+            
             if edit_student_submitted:
                 if edited_name.strip() == "":
-                    st.error("Please enter the student's name.")
+                    st.error("Please enter the student name.")
                 else:
-                    students.loc[
-                        students["id"].astype(int) == int(student_id_to_edit),
-                        "name"
-                    ] = edited_name
+                    updated_student = {
+                        "name": edited_name,
+                        "target_language": edited_target_language,
+                        "level": edited_level,
+                        "status": edited_status,
+                        "notes": edited_notes,
+                    }
 
-                    students.loc[
-                        students["id"].astype(int) == int(student_id_to_edit),
-                        "target_language"
-                    ] = edited_target_language
-
-                    students.loc[
-                        students["id"].astype(int) == int(student_id_to_edit),
-                        "level"
-                    ] = edited_level
-
-                    students.loc[
-                        students["id"].astype(int) == int(student_id_to_edit),
-                        "status"
-                    ] = edited_status
-
-                    students.loc[
-                        students["id"].astype(int) == int(student_id_to_edit),
-                        "notes"
-                    ] = edited_notes
-
-                    students.to_csv(STUDENTS_FILE, index=False)
+                    supabase.table("students").update(updated_student).eq(
+                        "id",
+                        int(student_id_to_edit)
+                    ).execute()
 
                     st.success("Student updated successfully!")
                     st.rerun()
@@ -594,17 +534,27 @@ elif page == "Students":
                     st.error("Please confirm deletion first.")
                 else:
                     student_id_to_delete = delete_student_options[student_to_delete]
-                    
-                    students = students[students["id"] != student_id_to_delete]
-                    assignments = assignments[assignments["student_id"] != student_id_to_delete]
-                    progress = progress[progress["student_id"] != student_id_to_delete]
-                    student_skills = student_skills[student_skills["student_id"] != student_id_to_delete]
-                    
-                    students.to_csv(STUDENTS_FILE, index=False)
-                    assignments.to_csv(ASSIGNMENTS_FILE, index=False)
-                    progress.to_csv(PROGRESS_FILE, index=False)
-                    student_skills.to_csv(STUDENT_SKILLS_FILE, index=False)
-                    
+
+                    supabase.table("assignments").delete().eq(
+                        "student_id",
+                        int(student_id_to_delete)
+                    ).execute()
+
+                    supabase.table("progress").delete().eq(
+                        "student_id",
+                        int(student_id_to_delete)
+                    ).execute()
+
+                    supabase.table("student_skills").delete().eq(
+                        "student_id",
+                        int(student_id_to_delete)
+                    ).execute()
+
+                    supabase.table("students").delete().eq(
+                        "id",
+                        int(student_id_to_delete)
+                    ).execute()
+
                     st.success("Student and related records deleted successfully!")
                     st.rerun()
 
@@ -987,34 +937,18 @@ elif page == "Courses":
                 if edited_title.strip() == "":
                     st.error("Please enter the course title.")
                 else:
-                    courses["description"] = courses["description"].astype("object")
+                    updated_course = {
+                        "title": edited_title,
+                        "target_language": edited_target_language,
+                        "instruction_language": edited_instruction_language,
+                        "level": edited_level,
+                        "description": edited_description,
+                    }
 
-                    courses.loc[
-                        courses["id"].astype(int) == int(course_id_to_edit),
-                        "title"
-                    ] = edited_title
-
-                    courses.loc[
-                        courses["id"].astype(int) == int(course_id_to_edit),
-                        "target_language"
-                    ] = edited_target_language
-
-                    courses.loc[
-                        courses["id"].astype(int) == int(course_id_to_edit),
-                        "instruction_language"
-                    ] = edited_instruction_language
-
-                    courses.loc[
-                        courses["id"].astype(int) == int(course_id_to_edit),
-                        "level"
-                    ] = edited_level
-
-                    courses.loc[
-                        courses["id"].astype(int) == int(course_id_to_edit),
-                        "description"
-                    ] = edited_description
-
-                    courses.to_csv(COURSES_FILE, index=False)
+                    supabase.table("courses").update(updated_course).eq(
+                        "id",
+                        int(course_id_to_edit)
+                    ).execute()
 
                     st.success("Course updated successfully!")
                     st.rerun()
@@ -1137,17 +1071,7 @@ elif page == "Lessons":
 
                     st.success("Lesson added successfully!")
                     st.rerun()
-                    
-                    lessons = pd.concat(
-                        [lessons, pd.DataFrame([new_lesson])],
-                        ignore_index=True
-                    )
-                    
-                    lessons.to_csv(LESSONS_FILE, index=False)
-                    
-                    st.success("Lesson added successfully!")
-                    st.rerun()
-    
+
     st.subheader("Edit lesson")
 
     if lessons.empty:
@@ -1261,61 +1185,27 @@ elif page == "Lessons":
                 if edited_title.strip() == "":
                     st.error("Please enter the lesson title.")
                 else:
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "title"
-                    ] = edited_title
+                    updated_lesson = {
+                        "title": edited_title,
+                        "lesson_date": str(edited_lesson_date),
+                        "start_time": str(edited_start_time),
+                        "duration_minutes": int(edited_duration_minutes),
+                        "lesson_goal": edited_lesson_goal,
+                        "skills_focus": ", ".join(edited_skills_focus),
+                        "materials": edited_materials,
+                        "materials_url": edited_materials_url,
+                        "homework_template": edited_homework_template,
+                        "homework_url": edited_homework_url,
+                    }
 
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "lesson_date"
-                    ] = edited_lesson_date.isoformat()
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "start_time"
-                    ] = edited_start_time.strftime("%H:%M")
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "duration_minutes"
-                    ] = int(edited_duration_minutes)
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "lesson_goal"
-                    ] = edited_lesson_goal
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "skills_focus"
-                    ] = ", ".join(edited_skills_focus)
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "materials"
-                    ] = edited_materials
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "homework_template"
-                    ] = edited_homework_template
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "materials_url"
-                    ] = edited_materials_url
-
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_edit),
-                        "homework_url"
-                    ] = edited_homework_url
-
-                    lessons.to_csv(LESSONS_FILE, index=False)
+                    supabase.table("lessons").update(updated_lesson).eq(
+                        "id",
+                        int(lesson_id_to_edit)
+                    ).execute()
 
                     st.success("Lesson updated successfully!")
                     st.rerun()
-    
+                
     st.subheader("Archive lesson")
 
     if active_lessons.empty:
@@ -1349,16 +1239,16 @@ elif page == "Lessons":
                 else:
                     lesson_id_to_archive = archive_lesson_options[lesson_to_archive]
 
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_archive),
-                        "is_archived"
-                    ] = True
-
-                    lessons.to_csv(LESSONS_FILE, index=False)
+                    supabase.table("lessons").update(
+                        {"is_archived": True}
+                    ).eq(
+                        "id",
+                        int(lesson_id_to_archive)
+                    ).execute()
 
                     st.success("Lesson archived successfully!")
                     st.rerun()
-    
+               
     st.subheader("Archived lessons")
 
     archived_lessons = lessons[lessons["is_archived"] == True].copy()
@@ -1419,12 +1309,12 @@ elif page == "Lessons":
                 else:
                     lesson_id_to_restore = restore_lesson_options[lesson_to_restore]
 
-                    lessons.loc[
-                        lessons["id"].astype(int) == int(lesson_id_to_restore),
-                        "is_archived"
-                    ] = False
-
-                    lessons.to_csv(LESSONS_FILE, index=False)
+                    supabase.table("lessons").update(
+                        {"is_archived": False}
+                    ).eq(
+                        "id",
+                        int(lesson_id_to_restore)
+                    ).execute()
 
                     st.success("Lesson restored successfully!")
                     st.rerun()
@@ -1552,38 +1442,6 @@ elif page == "Assignments":
             comments = st.text_area("Teacher comments")
                 
             assignment_submitted = st.form_submit_button("Add assignment")
-                
-            # if assignment_submitted:
-            #     if selected_lesson is None:
-            #         st.error("Please add a lesson for this course before creating an assignment.")
-            #     elif homework.strip() == "":
-            #         st.error("Please enter the homework task.")
-            #     else:
-            #         if assignments.empty:
-            #             new_assignment_id = 1
-            #         else:
-            #             new_assignment_id = int(assignments["id"].max()) + 1
-                        
-            #         new_assignment = {
-            #             "id": new_assignment_id,
-            #             "student_id": student_options[selected_student],
-            #             "course_id": selected_course_id,
-            #             "lesson_id": lesson_options[selected_lesson],
-            #             "homework": homework,
-            #             "status": status,
-            #             "evaluation": evaluation,
-            #             "comments": comments,
-            #         }
-                        
-            #         assignments = pd.concat(
-            #             [assignments, pd.DataFrame([new_assignment])],
-            #             ignore_index=True
-            #         )
-                        
-            #         assignments.to_csv(ASSIGNMENTS_FILE, index=False)
-                        
-            #         st.success("Assignment added successfully!")
-            #         st.rerun()
 
             if assignment_submitted:
                 if selected_lesson is None:
@@ -1687,27 +1545,17 @@ elif page == "Assignments":
                 if edited_homework.strip() == "":
                     st.error("Please enter the homework task.")
                 else:
-                    assignments.loc[
-                        assignments["id"].astype(int) == int(assignment_id_to_edit),
-                        "homework"
-                    ] = edited_homework
+                    updated_assignment = {
+                        "homework": edited_homework,
+                        "status": edited_status,
+                        "evaluation": edited_evaluation,
+                        "comments": edited_comments,
+                    }
 
-                    assignments.loc[
-                        assignments["id"].astype(int) == int(assignment_id_to_edit),
-                        "status"
-                    ] = edited_status
-
-                    assignments.loc[
-                        assignments["id"].astype(int) == int(assignment_id_to_edit),
-                        "evaluation"
-                    ] = edited_evaluation
-
-                    assignments.loc[
-                        assignments["id"].astype(int) == int(assignment_id_to_edit),
-                        "comments"
-                    ] = edited_comments
-
-                    assignments.to_csv(ASSIGNMENTS_FILE, index=False)
+                    supabase.table("assignments").update(updated_assignment).eq(
+                        "id",
+                        int(assignment_row["id"])
+                    ).execute()
 
                     st.success("Assignment updated successfully!")
                     st.rerun()
@@ -1748,9 +1596,10 @@ elif page == "Assignments":
                 else:
                     assignment_id_to_delete = delete_assignment_options[assignment_to_delete]
 
-                    assignments = assignments[assignments["id"] != assignment_id_to_delete]
-
-                    assignments.to_csv(ASSIGNMENTS_FILE, index=False)
+                    supabase.table("assignments").delete().eq(
+                        "id",
+                        int(assignment_id_to_delete)
+                    ).execute()
 
                     st.success("Assignment deleted successfully!")
                     st.rerun()
@@ -1946,19 +1795,17 @@ elif page == "Progress":
             edit_progress_submitted = st.form_submit_button("Save progress changes")
 
             if edit_progress_submitted:
-                progress.loc[
-                    progress["id"].astype(int) == int(progress_id_to_edit),
-                    "status"
-                ] = edited_progress_status
+                updated_progress = {
+                    "status": edited_progress_status,
+                    "teacher_comment": edited_teacher_comment,
+                }
 
-                progress.loc[
-                    progress["id"].astype(int) == int(progress_id_to_edit),
-                    "teacher_comment"
-                ] = edited_teacher_comment
+                supabase.table("progress").update(updated_progress).eq(
+                    "id",
+                    int(progress_row["id"])
+                ).execute()
 
-                progress.to_csv(PROGRESS_FILE, index=False)
-
-                st.success("Progress record updated successfully!")
+                st.success("Progress updated successfully!")
                 st.rerun()
 
     st.subheader("Delete progress record")
@@ -1997,9 +1844,10 @@ elif page == "Progress":
                 else:
                     progress_id_to_delete = delete_progress_options[progress_to_delete]
 
-                    progress = progress[progress["id"] != progress_id_to_delete]
-
-                    progress.to_csv(PROGRESS_FILE, index=False)
+                    supabase.table("progress").delete().eq(
+                        "id",
+                        int(progress_id_to_delete)
+                    ).execute()
 
                     st.success("Progress record deleted successfully!")
                     st.rerun()
@@ -2121,6 +1969,7 @@ elif page == "Student Skills":
 
                     st.success("Student skills added successfully!")
                     st.rerun()
+
     st.subheader("Edit student skills")
 
     if student_skills.empty:
@@ -2206,44 +2055,22 @@ elif page == "Student Skills":
             )
 
             edit_skills_submitted = st.form_submit_button("Update skills")
-
+            
             if edit_skills_submitted:
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "listening"
-                ] = edited_listening
+                updated_skills = {
+                    "listening": edited_listening,
+                    "reading": edited_reading,
+                    "speaking": edited_speaking,
+                    "writing": edited_writing,
+                    "grammar": edited_grammar,
+                    "vocabulary": edited_vocabulary,
+                    "comments": edited_comments,
+                }
 
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "reading"
-                ] = edited_reading
-
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "speaking"
-                ] = edited_speaking
-
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "writing"
-                ] = edited_writing
-
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "grammar"
-                ] = edited_grammar
-
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "vocabulary"
-                ] = edited_vocabulary
-
-                student_skills.loc[
-                    student_skills["id"].astype(int) == int(skill_id_to_edit),
-                    "comments"
-                ] = edited_comments
-
-                student_skills.to_csv(STUDENT_SKILLS_FILE, index=False)
+                supabase.table("student_skills").update(updated_skills).eq(
+                    "id",
+                    int(skill_row["id"])
+                ).execute()
 
                 st.success("Student skills updated successfully!")
                 st.rerun()
