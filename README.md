@@ -46,7 +46,6 @@ CourseKit/
 ```
 
 Data is stored in Supabase tables, not in local CSV files.
-````
 
 ## 🚀 How to Run Locally
 
