@@ -7,6 +7,30 @@ SUPABASE_ANON_KEY = st.secrets["SUPABASE_ANON_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+def sign_up_user(email, password):
+    return supabase.auth.sign_up(
+        {
+            "email": email,
+            "password": password,
+        }
+    )
+
+
+def sign_in_user(email, password):
+    return supabase.auth.sign_in_with_password(
+        {
+            "email": email,
+            "password": password,
+        }
+    )
+
+
+def sign_out_user():
+    supabase.auth.sign_out()
+    st.session_state.pop("user", None)
+    st.session_state.pop("access_token", None)
+    st.session_state.pop("refresh_token", None)
+
 SKILL_OPTIONS = [
     "Listening",
     "Reading",
@@ -48,6 +72,77 @@ def student_label(row):
 
     return f"{row['id']} — {row['name']} ({target_language} {level})"
 
+def show_auth_screen():
+    st.title("CourseKit 📚")
+    st.subheader("Sign in or create an account")
+
+    auth_tab, signup_tab = st.tabs(["Sign in", "Sign up"])
+
+    with auth_tab:
+        with st.form("sign_in_form"):
+            email = st.text_input("Email", key="sign_in_email")
+            password = st.text_input("Password", type="password", key="sign_in_password")
+            sign_in_submitted = st.form_submit_button("Sign in")
+
+        if sign_in_submitted:
+            if email.strip() == "" or password.strip() == "":
+                st.error("Please enter your email and password.")
+            else:
+                try:
+                    response = sign_in_user(email, password)
+
+                    st.session_state["user"] = response.user
+                    st.session_state["access_token"] = response.session.access_token
+                    st.session_state["refresh_token"] = response.session.refresh_token
+
+                    st.success("Signed in successfully!")
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"Sign in failed: {error}")
+
+    with signup_tab:
+        with st.form("sign_up_form"):
+            email = st.text_input("Email", key="sign_up_email")
+            password = st.text_input("Password", type="password", key="sign_up_password")
+            sign_up_submitted = st.form_submit_button("Create account")
+
+        if sign_up_submitted:
+            if email.strip() == "" or password.strip() == "":
+                st.error("Please enter your email and password.")
+            elif len(password) < 6:
+                st.error("Password should be at least 6 characters long.")
+            else:
+                try:
+                    response = sign_up_user(email, password)
+
+                    if response.session:
+                        st.session_state["user"] = response.user
+                        st.session_state["access_token"] = response.session.access_token
+                        st.session_state["refresh_token"] = response.session.refresh_token
+
+                        st.success("Account created successfully!")
+                        st.rerun()
+                    else:
+                        st.success("Account created. Please check your email to confirm your account.")
+                except Exception as error:
+                    st.error(f"Sign up failed: {error}")
+
+if "user" not in st.session_state:
+    show_auth_screen()
+    st.stop()
+
+if "access_token" in st.session_state and "refresh_token" in st.session_state:
+    try:
+        supabase.auth.set_session(
+            st.session_state["access_token"],
+            st.session_state["refresh_token"]
+        )
+    except Exception:
+        sign_out_user()
+        st.warning("Your session expired. Please sign in again.")
+        show_auth_screen()
+        st.stop()
+
 st.markdown(
 """
 <div class="hero-card">
@@ -74,10 +169,11 @@ unsafe_allow_html=True
 )
 
 TABLE_COLUMNS = {
-    "students": ["id", "name", "target_language", "level", "status", "notes"],
-    "courses": ["id", "title", "target_language", "instruction_language", "level", "description"],
+    "students": ["id", "user_id", "name", "target_language", "level", "status", "notes"],
+    "courses": ["id", "user_id", "title", "target_language", "instruction_language", "level", "description"],
     "lessons": [
         "id",
+        "user_id",
         "course_id",
         "title",
         "lesson_date",
@@ -93,6 +189,7 @@ TABLE_COLUMNS = {
     ],
     "assignments": [
         "id",
+        "user_id",
         "student_id",
         "course_id",
         "lesson_id",
@@ -103,6 +200,7 @@ TABLE_COLUMNS = {
     ],
     "progress": [
         "id",
+        "user_id",
         "student_id",
         "course_id",
         "lesson_id",
@@ -111,6 +209,7 @@ TABLE_COLUMNS = {
     ],
     "student_skills": [
         "id",
+        "user_id",
         "student_id",
         "listening",
         "reading",
@@ -122,9 +221,16 @@ TABLE_COLUMNS = {
     ],
 }
 
-
 def load_table(table_name):
-    response = supabase.table(table_name).select("*").execute()
+    user_id = st.session_state["user"].id
+
+    response = (
+        supabase.table(table_name)
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
     data = response.data or []
     return pd.DataFrame(data, columns=TABLE_COLUMNS[table_name])
 
@@ -236,6 +342,15 @@ if "duration_minutes" in lessons.columns and not lessons.empty:
         lessons["duration_minutes"],
         errors="coerce"
     ).fillna(60).astype(int)
+
+current_user = st.session_state["user"]
+user_id = current_user.id
+
+st.sidebar.caption(f"Signed in as: {current_user.email}")
+
+if st.sidebar.button("Sign out"):
+    sign_out_user()
+    st.rerun()
 
 st.sidebar.title("CourseKit")
 page = st.sidebar.radio(
@@ -403,6 +518,7 @@ elif page == "Students":
                 st.error("Please enter the student name.")
             else:
                 new_student = {
+                    "user_id": user_id,
                     "name": name,
                     "target_language": language,
                     "level": level,
@@ -500,6 +616,9 @@ elif page == "Students":
                     supabase.table("students").update(updated_student).eq(
                         "id",
                         int(student_id_to_edit)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Student updated successfully!")
@@ -538,21 +657,33 @@ elif page == "Students":
                     supabase.table("assignments").delete().eq(
                         "student_id",
                         int(student_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     supabase.table("progress").delete().eq(
                         "student_id",
                         int(student_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     supabase.table("student_skills").delete().eq(
                         "student_id",
                         int(student_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     supabase.table("students").delete().eq(
                         "id",
                         int(student_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Student and related records deleted successfully!")
@@ -853,6 +984,7 @@ elif page == "Courses":
                 st.error("Please enter the course title.")
             else:
                 new_course = {
+                    "user_id": user_id,
                     "title": title,
                     "target_language": course_language,
                     "instruction_language": instruction_language,
@@ -948,6 +1080,9 @@ elif page == "Courses":
                     supabase.table("courses").update(updated_course).eq(
                         "id",
                         int(course_id_to_edit)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Course updated successfully!")
@@ -1053,6 +1188,7 @@ elif page == "Lessons":
                     st.error("Please enter the lesson title.")
                 else:
                     new_lesson = {
+                        "user_id": user_id,
                         "course_id": int(str(selected_course).split(" — ")[0]),
                         "title": title,
                         "lesson_date": str(lesson_date),
@@ -1201,6 +1337,9 @@ elif page == "Lessons":
                     supabase.table("lessons").update(updated_lesson).eq(
                         "id",
                         int(lesson_id_to_edit)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Lesson updated successfully!")
@@ -1244,6 +1383,9 @@ elif page == "Lessons":
                     ).eq(
                         "id",
                         int(lesson_id_to_archive)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Lesson archived successfully!")
@@ -1314,10 +1456,14 @@ elif page == "Lessons":
                     ).eq(
                         "id",
                         int(lesson_id_to_restore)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Lesson restored successfully!")
                     st.rerun()
+
 
 elif page == "Assignments":
     
@@ -1450,6 +1596,7 @@ elif page == "Assignments":
                     st.error("Please enter the homework task.")
                 else:
                     new_assignment = {
+                        "user_id": user_id,
                         "student_id": int(student_options[selected_student]),
                         "course_id": int(selected_course_id),
                         "lesson_id": int(lesson_options[selected_lesson]),
@@ -1555,6 +1702,9 @@ elif page == "Assignments":
                     supabase.table("assignments").update(updated_assignment).eq(
                         "id",
                         int(assignment_row["id"])
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Assignment updated successfully!")
@@ -1599,6 +1749,9 @@ elif page == "Assignments":
                     supabase.table("assignments").delete().eq(
                         "id",
                         int(assignment_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Assignment deleted successfully!")
@@ -1729,6 +1882,7 @@ elif page == "Progress":
                     st.error("Please add a lesson for this course before adding progress.")
                 else:
                     new_progress = {
+                        "user_id": user_id,
                         "student_id": int(student_options[selected_student]),
                         "course_id": int(selected_course_id),
                         "lesson_id": int(lesson_options[selected_lesson]),
@@ -1803,6 +1957,9 @@ elif page == "Progress":
                 supabase.table("progress").update(updated_progress).eq(
                     "id",
                     int(progress_row["id"])
+                ).eq(
+                    "user_id",
+                    user_id
                 ).execute()
 
                 st.success("Progress updated successfully!")
@@ -1847,6 +2004,9 @@ elif page == "Progress":
                     supabase.table("progress").delete().eq(
                         "id",
                         int(progress_id_to_delete)
+                    ).eq(
+                        "user_id",
+                        user_id
                     ).execute()
 
                     st.success("Progress record deleted successfully!")
@@ -1955,6 +2115,7 @@ elif page == "Student Skills":
                     st.error("This student already has a skills profile.")
                 else:
                     new_skill = {
+                        "user_id": user_id,
                         "student_id": int(student_options[selected_student]),
                         "listening": listening,
                         "reading": reading,
@@ -2070,6 +2231,9 @@ elif page == "Student Skills":
                 supabase.table("student_skills").update(updated_skills).eq(
                     "id",
                     int(skill_row["id"])
+                ).eq(
+                    "user_id",
+                    user_id
                 ).execute()
 
                 st.success("Student skills updated successfully!")
