@@ -4,8 +4,12 @@ CourseKit is a lightweight mini LMS for language teachers and course creators.
 
 It helps manage students, courses, lessons, assignments, student skills, and learning progress in one simple Streamlit app.
 
+The app includes user authentication, so each teacher can sign in and manage their own workspace.
+
 ## ✨ Features
 
+- User authentication with Supabase Auth
+- User-specific data access with Row Level Security policies
 - Student management: add, edit, delete students
 - Course management: create and edit language courses
 - Lesson planning: lesson goals, skills focus, materials, homework templates
@@ -17,13 +21,16 @@ It helps manage students, courses, lessons, assignments, student skills, and lea
 - Student skills tracking: listening, reading, speaking, writing, grammar, and vocabulary
 - Lesson archive and restore workflow
 - Dashboard with key metrics and status overviews
+- Mobile-friendly layout improvements
 
 ## 🛠️ Tech Stack
 
 - Python
 - Streamlit
 - Pandas
-- Supabase
+- Supabase database
+- Supabase Auth
+- Row Level Security policies
 - Custom CSS
 
 ## 📁 Project Structure
@@ -35,7 +42,7 @@ CourseKit/
 ├── requirements.txt
 ├── .gitignore
 ├── README.md
-└── screenshots/ # planned screenshots for the deployed app
+└── screenshots/
     ├── dashboard.png
     ├── courses.png
     ├── students.png
@@ -52,14 +59,28 @@ Data is stored in Supabase tables, not in local CSV files.
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/coursekit.git
-cd coursekit
+git clone https://github.com/ianakorshunova/CourseKit.git
+cd CourseKit
 ```
 
 Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
+
+Create a local Streamlit secrets file:
+
+```bash
+mkdir -p .streamlit
+touch .streamlit/secrets.toml
+```
+
+Add your Supabase credentials to `.streamlit/secrets.toml`:
+
+```toml
+SUPABASE_URL = "your-supabase-project-url"
+SUPABASE_ANON_KEY = "your-supabase-publishable-key"
 ```
 
 Run the app:
@@ -76,26 +97,27 @@ The app stores courses, students, lessons, assignments, progress records, and st
 
 Main tables:
 
-- `students` — student profiles, target language, level, status, and notes
-- `courses` — course information, target language, instruction language, level, and description
-- `lessons` — lesson plans, dates, start times, duration, materials, homework templates, and archive status
-- `assignments` — homework tasks, assignment status, evaluation, and teacher comments
-- `progress` — student progress by course and lesson
-- `student_skills` — skill profiles for each student: listening, reading, speaking, writing, grammar, vocabulary, and comments
+- `students` — student profiles, target language, level, status, notes, and owner user ID
+- `courses` — course information, target language, instruction language, level, description, and owner user ID
+- `lessons` — lesson plans, dates, start times, duration, materials, homework templates, archive status, and owner user ID
+- `assignments` — homework tasks, assignment status, evaluation, teacher comments, and owner user ID
+- `progress` — student progress by course and lesson, linked to the owner user ID
+- `student_skills` — skill profiles for each student: listening, reading, speaking, writing, grammar, vocabulary, comments, and owner user ID
 
-The current version uses demo data. Authentication and user-specific access are planned as future improvements.
+Each record is linked to a Supabase Auth user. Row Level Security policies restrict access so users can manage only their own data.
 
 ## 🧪 Example Use Case
 
 A language teacher can use CourseKit to:
 
-1. Add students and their target language levels.
-2. Create language courses.
-3. Plan lessons with goals, materials, homework, dates, and resource links.
-4. Assign homework to students.
-5. Track lesson progress.
-6. Monitor student skills across listening, reading, speaking, writing, grammar, and vocabulary.
-7. View all important information on the student profile page.
+1. Create an account and sign in.
+2. Add students and their target language levels.
+3. Create language courses.
+4. Plan lessons with goals, materials, homework, dates, and resource links.
+5. Assign homework to students.
+6. Track lesson progress.
+7. Monitor student skills across listening, reading, speaking, writing, grammar, and vocabulary.
+8. View all important information on the student profile page.
 
 ## 🖼 Screenshots
 
@@ -108,8 +130,8 @@ Screenshots will be added soon.
 - Calendar view for scheduled lessons
 - Attendance tracking
 - Exportable student reports
-- Authentication and user accounts
+- Teacher onboarding flow and sample demo workspace
 
 ## 👩‍💻 Author
 
-Created by Iana Korshunova as an EdTech / Python / Streamlit portfolio project.
+Created by Iana Korshunova as an EdTech / Python / Streamlit / Supabase portfolio project.
