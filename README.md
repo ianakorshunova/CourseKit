@@ -121,7 +121,37 @@ A language teacher can use CourseKit to:
 
 ## 🖼 Screenshots
 
-Screenshots will be added soon.
+### Sign in
+
+![Sign in](screenshots/sign-in.png)
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Courses
+
+![Courses](screenshots/courses.png)
+
+### Lessons
+
+![Lessons](screenshots/lessons.png)
+
+### Assignments
+
+![Assignments](screenshots/assignments.png)
+
+### Progress
+
+![Progress](screenshots/progress.png)
+
+### Student Skills
+
+![Student Skills](screenshots/student-skills.png)
+
+### Student Profile
+
+![Student Profile](screenshots/student-profile.png)
 
 ## 🌱 Future Improvements
 
