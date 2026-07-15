@@ -1666,7 +1666,7 @@ elif page == "Students":
         hide_index=True,
         column_config={
             "name": st.column_config.TextColumn(
-                t("student_name")
+                t("student_name"),
                 width="medium",
             ),
             "target_language": st.column_config.TextColumn(
