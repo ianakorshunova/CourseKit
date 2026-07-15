@@ -357,3 +357,9 @@
         overflow: hidden !important;
     }
 }
+
+div[data-testid="stMetricValue"] {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.1 !important;
+}
