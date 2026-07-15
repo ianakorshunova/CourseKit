@@ -1633,19 +1633,27 @@ elif page == "Students":
     students_view = filtered_students.copy()
 
     students_view["target_language"] = students_view["target_language"].apply(
-        lambda value: display_value(value, "Not specified")
+        lambda value: t(
+            LANGUAGE_TRANSLATION_KEYS.get(value, value)
+        )
+        if not pd.isna(value) and str(value).strip() != ""
+        else t("not_specified")
     )
 
     students_view["level"] = students_view["level"].apply(
-        lambda value: display_value(value, "Not specified")
+        lambda value: display_value(value, t("not_specified"))
     )
 
     students_view["status"] = students_view["status"].apply(
-        lambda value: display_value(value, "Not specified")
+        lambda value: t(
+            STUDENT_STATUS_TRANSLATION_KEYS.get(value, value)
+        )
+        if not pd.isna(value) and str(value).strip() != ""
+        else t("not_specified")
     )
 
     students_view["notes"] = students_view["notes"].apply(
-        lambda value: display_value(value, "No notes")
+        lambda value: display_value(value, t("no_notes"))
     )
 
     students_view = students_view[
@@ -1657,11 +1665,26 @@ elif page == "Students":
         width="stretch",
         hide_index=True,
         column_config={
-            "name": st.column_config.TextColumn("Name", width="medium"),
-            "target_language": st.column_config.TextColumn("Target language", width="medium"),
-            "level": st.column_config.TextColumn("Level", width="small"),
-            "status": st.column_config.TextColumn("Status", width="small"),
-            "notes": st.column_config.TextColumn("Notes", width="large"),
+            "name": st.column_config.TextColumn(
+                t("student_name")
+                width="medium",
+            ),
+            "target_language": st.column_config.TextColumn(
+                t("target_language"),
+                width="medium",
+            ),
+            "level": st.column_config.TextColumn(
+                t("level"),
+                width="small",
+            ),
+            "status": st.column_config.TextColumn(
+                t("status"),
+                width="small",
+            ),
+            "notes": st.column_config.TextColumn(
+                t("notes"),
+                width="large",
+            ),
         }
     )
     
