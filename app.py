@@ -866,7 +866,49 @@ TRANSLATIONS = {
         "lessons": "课时",
         "assignments": "作业",
         "progress": "学习进度",
+
+        "progress_overview": "学习进度概览",
+        "progress_details": "学习进度详情",
+        "no_progress_records_yet": "暂无学习进度记录。",
+        "teacher_comment": "教师评语",
+
+        "add_progress_record": "添加学习进度记录",
+        "add_student_before_progress": "请先添加学生，再添加学习进度。",
+        "add_course_before_progress": "请先添加课程，再添加学习进度。",
+        "add_lesson_before_progress": "请先添加课时，再添加学习进度。",
+        "progress_status": "学习进度状态",
+        "add_progress": "添加学习进度",
+        "add_lesson_for_progress_first": "请先为该课程添加课时。",
+        "progress_added_successfully": "学习进度添加成功！",
+
+        "edit_progress_record": "编辑学习进度记录",
+        "no_progress_records_to_edit": "暂无可编辑的学习进度记录。",
+        "select_progress_record_to_edit": "选择要编辑的学习进度记录",
+        "save_progress_changes": "保存学习进度修改",
+        "progress_updated_successfully": "学习进度更新成功！",
+
+        "delete_progress_record": "删除学习进度记录",
+        "no_progress_records_to_delete": "暂无可删除的学习进度记录。",
+        "select_progress_record_to_delete": "选择要删除的学习进度记录",
+        "confirm_delete_progress": "我明白，该学习进度记录将被永久删除。",
+        "progress_record_deleted_successfully": "学习进度记录删除成功！",
+
         "student_skills": "学生技能",
+
+        "skills_details": "技能详情",
+        "no_skill_records_yet": "暂无技能记录。",
+
+        "add_student_skills": "添加学生技能",
+        "add_student_before_skills": "请先添加学生，再添加技能。",
+        "add_skills": "添加技能",
+        "student_already_has_skills_profile": "该学生已有技能档案。",
+        "student_skills_added_successfully": "学生技能添加成功！",
+
+        "edit_student_skills": "编辑学生技能",
+        "no_skills_records_to_edit": "暂无可编辑的技能记录。",
+        "select_skills_record_to_edit": "选择要编辑的技能记录",
+        "update_skills": "更新技能",
+        "student_skills_updated_successfully": "学生技能更新成功！",
 
         "assignment_status_overview": "作业状态概览",
         "progress_status_overview": "学习进度概览",
@@ -1064,6 +1106,18 @@ TRANSLATIONS = {
         "good": "良好",
         "satisfactory": "合格",
         "needs_improvement": "需要改进",
+
+        "edit_assignment": "编辑作业",
+        "no_assignments_to_edit": "暂无可编辑的作业。",
+        "select_assignment_to_edit": "选择要编辑的作业",
+        "save_assignment_changes": "保存作业修改",
+        "assignment_updated_successfully": "作业更新成功！",
+
+        "delete_assignment": "删除作业",
+        "no_assignments_to_delete": "暂无可删除的作业。",
+        "select_assignment_to_delete": "选择要删除的作业",
+        "confirm_delete_assignment": "我明白，该作业将被永久删除。",
+        "assignment_deleted_successfully": "作业删除成功！",
     },
 
     "edit_assignment": "编辑作业",
@@ -1160,6 +1214,7 @@ TRANSLATIONS = {
 
      "no_courses_yet": "暂时还没有课程。",
 }
+
 
 LANGUAGE_TRANSLATION_KEYS = {
     "English": "language_english",
