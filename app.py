@@ -535,6 +535,8 @@ TRANSLATIONS = {
         "progress_not_started": "Not started",
         "progress_in_progress": "In progress",
         "progress_completed": "Completed",
+
+        "no_courses_yet": "No courses yet.",
     },
 
     "Русский": {
@@ -847,6 +849,8 @@ TRANSLATIONS = {
         "progress_not_started": "Не начато",
         "progress_in_progress": "В процессе",
         "progress_completed": "Завершено",
+
+        "no_courses_yet": "Курсов пока нет.",
     },
 
     "中文": {
@@ -1153,6 +1157,8 @@ TRANSLATIONS = {
     "progress_not_started": "未开始",
     "progress_in_progress": "进行中",
     "progress_completed": "已完成",
+
+     "no_courses_yet": "暂时还没有课程。",
 }
 
 LANGUAGE_TRANSLATION_KEYS = {
@@ -2042,10 +2048,22 @@ elif page == "Student Profile":
             t("student"),
             display_value(student_row["name"], t("unknown_student")),
         )
+        
+        student_language = student_row["target_language"]
+
+        if pd.isna(student_language) or str(student_language).strip() == "":
+            student_language_label = t("not_specified")
+        else:
+            student_language_label = t(
+                LANGUAGE_TRANSLATION_KEYS.get(
+                    student_language,
+                    student_language,
+                )
+            )
 
         col2.metric(
             t("target_language"),
-            display_value(student_row["target_language"], t("not_specified")),
+            student_language_label,
         )
 
         col3.metric(
@@ -2380,55 +2398,59 @@ elif page == "Courses":
 
     courses_view = courses.copy()
 
-    courses_view["target_language"] = courses_view["target_language"].apply(
-        lambda value: t(
-            LANGUAGE_TRANSLATION_KEYS.get(
-                value,
-                value,
+    if courses_view.empty:
+        st.info(t("no_courses_yet"))
+
+    else:
+        courses_view["target_language"] = courses_view["target_language"].apply(
+            lambda value: t(
+                LANGUAGE_TRANSLATION_KEYS.get(
+                    value,
+                    value,
+                )
             )
+            if not pd.isna(value) and str(value).strip() != ""
+            else t("not_specified")
         )
-        if not pd.isna(value) and str(value).strip() != ""
-        else t("not_specified")
-    )
 
-    courses_view["instruction_language"] = courses_view["instruction_language"].apply(
-        lambda value: t(
-            LANGUAGE_TRANSLATION_KEYS.get(
-                value,
-                value,
+        courses_view["instruction_language"] = courses_view["instruction_language"].apply(
+            lambda value: t(
+                LANGUAGE_TRANSLATION_KEYS.get(
+                    value,
+                    value,
+                )
             )
+            if not pd.isna(value) and str(value).strip() != ""
+            else t("not_specified")
         )
-        if not pd.isna(value) and str(value).strip() != ""
-        else t("not_specified")
-    )
 
-    courses_view = courses_view[
-        ["title", "target_language", "instruction_language", "level"]
-    ]
+        courses_view = courses_view[
+            ["title", "target_language", "instruction_language", "level"]
+        ]
 
-    st.dataframe(
-        courses_view,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "title": st.column_config.TextColumn(
-                t("title"),
-                width="large",
-            ),
-            "target_language": st.column_config.TextColumn(
-                t("target_language"),
-                width="medium",
-            ),
-            "instruction_language": st.column_config.TextColumn(
-                t("taught_in"),
-                width="large",
-            ),
-            "level": st.column_config.TextColumn(
-                t("level"),
-                width="small",
-            ),
-        }
-    )
+        st.dataframe(
+            courses_view,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "title": st.column_config.TextColumn(
+                    t("title"),
+                    width="large",
+                ),
+                "target_language": st.column_config.TextColumn(
+                    t("target_language"),
+                    width="medium",
+                ),
+                "instruction_language": st.column_config.TextColumn(
+                    t("taught_in"),
+                    width="large",
+                ),
+                "level": st.column_config.TextColumn(
+                    t("level"),
+                    width="small",
+                ),
+            },
+        )
     
     st.subheader(t("add_new_course"))
 
@@ -2618,44 +2640,53 @@ elif page == "Courses":
 elif page == "Lessons":
 
     st.header(t("lessons"))
+
     st.subheader(t("lesson_list"))
 
     lessons_view = active_lessons.copy()
-    
-    if not lessons_view.empty and not courses.empty:
+
+    if lessons_view.empty:
+        st.info(t("no_lessons_yet"))
+
+    elif courses.empty:
+        st.info(t("no_courses_yet"))
+
+    else:
         course_titles = dict(zip(courses["id"], courses["title"]))
+
         lessons_view["course"] = lessons_view["course_id"].map(course_titles)
+
         lessons_view = lessons_view[
             ["course", "title", "lesson_date", "start_time", "duration_minutes"]
         ]
-    
-    st.dataframe(
-        lessons_view,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "course": st.column_config.TextColumn(
-                t("course"),
-                width="medium",
-            ),
-            "title": st.column_config.TextColumn(
-                t("title"),
-                width="large",
-            ),
-            "lesson_date": st.column_config.TextColumn(
-                t("date"),
-                width="small",
-            ),
-            "start_time": st.column_config.TextColumn(
-                t("time"),
-                width="small",
-            ),
-            "duration_minutes": st.column_config.NumberColumn(
-                t("minutes_short"),
-                width="small",
-            ),
-        }
-    )
+
+        st.dataframe(
+            lessons_view,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "course": st.column_config.TextColumn(
+                    t("course"),
+                    width="medium",
+                ),
+                "title": st.column_config.TextColumn(
+                    t("title"),
+                    width="large",
+                ),
+                "lesson_date": st.column_config.TextColumn(
+                    t("date"),
+                    width="small",
+                ),
+                "start_time": st.column_config.TextColumn(
+                    t("time"),
+                    width="small",
+                ),
+                "duration_minutes": st.column_config.NumberColumn(
+                    t("minutes_short"),
+                    width="small",
+                ),
+            },
+        )
     
     st.subheader(t("lesson_details"))
     
@@ -3101,46 +3132,57 @@ elif page == "Assignments":
     st.header(t("assignments"))
 
     st.subheader(t("assignment_list"))
-    
+
     assignments_view = assignments.copy()
-    
-    if not assignments_view.empty:
+
+    if assignments_view.empty:
+        st.info(t("no_assignments_yet"))
+
+    else:
         student_names = dict(zip(students["id"], students["name"]))
         course_titles = dict(zip(courses["id"], courses["title"]))
         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-        
+
         assignments_view["student"] = assignments_view["student_id"].map(student_names)
         assignments_view["course"] = assignments_view["course_id"].map(course_titles)
         assignments_view["lesson"] = assignments_view["lesson_id"].map(lesson_titles)
-        
+
+        assignments_view["status"] = assignments_view["status"].apply(
+            lambda value: t(ASSIGNMENT_STATUS_TRANSLATION_KEYS[value])
+        )
+
+        assignments_view["evaluation"] = assignments_view["evaluation"].apply(
+            lambda value: t(EVALUATION_TRANSLATION_KEYS[value])
+        )
+
         assignments_view = assignments_view[
             ["student", "lesson", "status", "evaluation"]
         ]
-    
-    st.dataframe(
-        assignments_view,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "student": st.column_config.TextColumn(
-                t("student"),
-                width="medium",
-            ),
-            "lesson": st.column_config.TextColumn(
-                t("lesson"),
-                width="large",
-            ),
-            "status": st.column_config.TextColumn(
-                t("status"),
-                width="small",
-            ),
-            "evaluation": st.column_config.TextColumn(
-                t("evaluation"),
-                width="medium",
-            ),
-        }
-    )
-    
+
+        st.dataframe(
+            assignments_view,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "student": st.column_config.TextColumn(
+                    t("student"),
+                    width="medium",
+                ),
+                "lesson": st.column_config.TextColumn(
+                    t("lesson"),
+                    width="large",
+                ),
+                "status": st.column_config.TextColumn(
+                    t("status"),
+                    width="small",
+                ),
+                "evaluation": st.column_config.TextColumn(
+                    t("evaluation"),
+                    width="medium",
+                ),
+            },
+        )
+        
     st.subheader(t("assignment_details"))
 
     if assignments.empty:
@@ -3515,7 +3557,12 @@ elif page == "Progress":
 
     progress_view = progress.copy()
 
-    if not progress_view.empty:
+    st.subheader(t("progress_overview"))
+
+    if progress_view.empty:
+        st.info(t("no_progress_records_yet"))
+
+    else:
         student_names = dict(zip(students["id"], students["name"]))
         course_titles = dict(zip(courses["id"], courses["title"]))
         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
@@ -3526,7 +3573,10 @@ elif page == "Progress":
 
         progress_view["status"] = progress_view["status"].apply(
             lambda value: t(
-                PROGRESS_STATUS_TRANSLATION_KEYS.get(value, value)
+                PROGRESS_STATUS_TRANSLATION_KEYS.get(
+                    value,
+                    value,
+                )
             )
         )
 
@@ -3534,36 +3584,29 @@ elif page == "Progress":
             ["student", "course", "lesson", "status"]
         ]
 
-    else:
-        progress_view = pd.DataFrame(
-            columns=["student", "course", "lesson", "status"]
+        st.dataframe(
+            progress_view,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "student": st.column_config.TextColumn(
+                    t("student"),
+                    width="medium",
+                ),
+                "course": st.column_config.TextColumn(
+                    t("course"),
+                    width="medium",
+                ),
+                "lesson": st.column_config.TextColumn(
+                    t("lesson"),
+                    width="large",
+                ),
+                "status": st.column_config.TextColumn(
+                    t("status"),
+                    width="small",
+                ),
+            },
         )
-    
-    st.subheader(t("progress_overview"))
-
-    st.dataframe(
-        progress_view,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "student": st.column_config.TextColumn(
-                t("student"),
-                width="medium",
-            ),
-            "course": st.column_config.TextColumn(
-                t("course"),
-                width="medium",
-            ),
-            "lesson": st.column_config.TextColumn(
-                t("lesson"),
-                width="large",
-            ),
-            "status": st.column_config.TextColumn(
-                t("status"),
-                width="small",
-            ),
-        },
-    )
 
     st.subheader(t("progress_details"))
 
