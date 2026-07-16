@@ -1479,46 +1479,6 @@ page = st.sidebar.radio(
     ),
 )
 
-# if page == "Dashboard":
-
-#     st.subheader("Dashboard")
-
-#     col1, col2, col3, col4, col5 = st.columns(5)
-    
-#     col1.metric("Students", len(students))
-#     col2.metric("Courses", len(courses))
-#     col3.metric("Lessons", len(active_lessons))
-#     col4.metric("Assignments", len(assignments))
-#     col5.metric("Progress", len(progress))
-
-#     st.subheader("Assignment status overview")
-
-#     if assignments.empty:
-#         st.info("No assignments yet.")
-#     else:
-#         status_counts = assignments["status"].value_counts()
-
-#         col1, col2, col3, col4, col5 = st.columns(5)
-
-#         col1.metric("Assigned", int(status_counts.get("assigned", 0)))
-#         col2.metric("Submitted", int(status_counts.get("submitted", 0)))
-#         col3.metric("Checked", int(status_counts.get("checked", 0)))
-#         col4.metric("Needs revision", int(status_counts.get("needs revision", 0)))
-#         col5.metric("Completed", int(status_counts.get("completed", 0)))
-    
-#     st.subheader("Progress status overview")
-
-#     if progress.empty:
-#         st.info("No progress records yet.")
-#     else:
-#         progress_status_counts = progress["status"].value_counts()
-
-#         col1, col2, col3 = st.columns(3)
-
-#         col1.metric("Not started", int(progress_status_counts.get("not started", 0)))
-#         col2.metric("In progress", int(progress_status_counts.get("in progress", 0)))
-#         col3.metric("Completed", int(progress_status_counts.get("completed", 0)))
-
 if page == "Dashboard":
 
     st.subheader(t("dashboard"))
@@ -1597,31 +1557,6 @@ elif page == "Students":
         t("search_by_student_name"),
         key="student_search",
     )
-
-    # language_options = (
-    #     students["target_language"]
-    #     .dropna()
-    #     .astype(str)
-    #     .str.strip()
-    # )
-
-    # language_filter = st.selectbox(
-    #     "Filter by language",
-    #     ["All"] + language_options,
-    #     key="student_language_filter"
-    # )
-    
-    # level_filter = st.selectbox(
-    #     "Filter by level",
-    #     ["All"] + sorted(students["level"].dropna().unique().tolist()),
-    #     key="student_level_filter"
-    # )
-    
-    # status_filter = st.selectbox(
-    #     "Filter by status",
-    #     ["All"] + sorted(students["status"].dropna().unique().tolist()),
-    #     key="student_status_filter"
-    # )
 
     language_options = sorted(
     students["target_language"]
@@ -1814,24 +1749,6 @@ elif page == "Students":
                 st.success(t("student_added_successfully"))
                 st.rerun()
 
-    # st.subheader("Edit student")
-    
-    # if students.empty:
-    #     st.info("No students to edit.")
-    
-    # else:
-
-    #     edit_student_options = {
-    #         student_label(row): int(row["id"])
-    #         for _, row in students.iterrows()
-    #     }
-        
-    #     selected_student_to_edit = st.selectbox(
-    #         "Select student to edit",
-    #         list(edit_student_options.keys()),
-    #         key="edit_student_select"
-    #     )
-
     st.subheader(t("edit_student"))
 
     if students.empty:
@@ -1865,14 +1782,6 @@ elif page == "Students":
 
             language_options = ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
 
-            # edited_target_language = st.selectbox(
-            #     "Target language",
-            #     language_options,
-            #     index=language_options.index(student_target_language)
-            #     if student_target_language in language_options
-            #     else language_options.index("Other")
-            # )
-
             edited_target_language = st.selectbox(
                 t("target_language"),
                 language_options,
@@ -1885,14 +1794,6 @@ elif page == "Students":
                     LANGUAGE_TRANSLATION_KEYS.get(value, value)
                 ),
             )
-
-            # edited_level = st.selectbox(
-            #     "Level",
-            #     ["A1", "A2", "B1", "B2", "C1", "C2"],
-            #     index=["A1", "A2", "B1", "B2", "C1", "C2"].index(student_row["level"])
-            #     if student_row["level"] in ["A1", "A2", "B1", "B2", "C1", "C2"]
-            #     else 0
-            # )
 
             edited_level = st.selectbox(
                 t("level"),
@@ -1968,41 +1869,6 @@ elif page == "Students":
 
                 st.success(t("student_updated_successfully"))
                 st.rerun()
-
-    # st.subheader(t("delete_student"))
-    
-    # if students.empty:
-    #     st.info(t("no_students_to_delete"))
-    # else:
-
-    #     delete_student_options = {
-    #         student_label(row): int(row["id"])
-    #         for _, row in students.iterrows()
-    #     }
-        
-    #     with st.form("delete_student_form"):
-    #         student_to_delete = st.selectbox(
-    #             student_to_delete = st.selectbox(
-    #             t("select_student_to_delete"),
-    #             list(delete_student_options.keys()),
-    #             key="delete_student_select",
-    #         )
-    #         )
-
-    #         confirm_delete_student = st.checkbox(
-    #             t("confirm_delete_student")
-    #             "I understand that this will also delete this student's assignments, progress records, and skills."
-    #         )
-            
-    #         delete_student_submitted = st.form_submit_button(
-    #             t("delete_student")
-    #         )
-                        
-    #         if delete_student_submitted:
-    #             if not confirm_delete_student:
-    #                 st.error("Please confirm deletion first.")
-    #             else:
-    #                 student_id_to_delete = delete_student_options[student_to_delete]
 
     st.subheader(t("delete_student"))
 
