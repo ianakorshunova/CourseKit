@@ -1630,6 +1630,13 @@ elif page == "Students":
 
     students_view = filtered_students.copy()
 
+    if not students_view.empty:
+        students_view = students_view.sort_values(
+            by="name",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
     students_view["target_language"] = students_view["target_language"].apply(
         lambda value: t(
             LANGUAGE_TRANSLATION_KEYS.get(value, value)
