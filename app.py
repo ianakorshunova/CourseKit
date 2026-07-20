@@ -2752,7 +2752,7 @@ elif page == "Lessons":
                 else:
                     new_lesson = {
                         "user_id": user_id,
-                        "course_id": int(str(selected_course).split(" — ")[0]),
+                        "course_id": int(course_options[selected_course]),
                         "title": title,
                         "lesson_date": str(lesson_date),
                         "start_time": str(start_time),
