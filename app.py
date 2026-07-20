@@ -3095,10 +3095,26 @@ elif page == "Assignments":
         student_names = dict(zip(students["id"], students["name"]))
         course_titles = dict(zip(courses["id"], courses["title"]))
         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+        lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+        lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
 
         assignments_view["student"] = assignments_view["student_id"].map(student_names)
         assignments_view["course"] = assignments_view["course_id"].map(course_titles)
         assignments_view["lesson"] = assignments_view["lesson_id"].map(lesson_titles)
+        assignments_view["lesson_date"] = assignments_view["lesson_id"].map(
+            lesson_dates
+        )
+
+        assignments_view["start_time"] = assignments_view["lesson_id"].map(
+            lesson_times
+        )
+
+        assignments_view = assignments_view.sort_values(
+            by=["lesson_date", "start_time", "student"],
+            ascending=[True, True, True],
+            na_position="last",
+        )
+
 
         assignments_view["status"] = assignments_view["status"].apply(
             lambda value: t(ASSIGNMENT_STATUS_TRANSLATION_KEYS[value])
@@ -3111,6 +3127,20 @@ elif page == "Assignments":
         assignments_view = assignments_view[
             ["student", "lesson", "status", "evaluation"]
         ]
+
+        # assignments_view["lesson_date"] = assignments_view["lesson_id"].map(
+        #     lesson_dates
+        # )
+
+        # assignments_view["start_time"] = assignments_view["lesson_id"].map(
+        #     lesson_times
+        # )
+
+        # assignments_view = assignments_view.sort_values(
+        #     by=["lesson_date", "start_time", "student"],
+        #     ascending=[True, True, True],
+        #     na_position="last",
+        # )
 
         st.dataframe(
             assignments_view,
@@ -3144,12 +3174,32 @@ elif page == "Assignments":
         student_names = dict(zip(students["id"], students["name"]))
         course_titles = dict(zip(courses["id"], courses["title"]))
         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+
+        lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+        lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
+
+        assignment_details_view = assignments.copy()
+
+        assignment_details_view["student"] = (
+            assignment_details_view["student_id"].map(student_names)
+        )
+
+        assignment_details_view["lesson_date"] = (
+            assignment_details_view["lesson_id"].map(lesson_dates)
+        )
+
+        assignment_details_view["start_time"] = (
+            assignment_details_view["lesson_id"].map(lesson_times)
+        )
+
+        assignment_details_view = assignment_details_view.sort_values(
+            by=["lesson_date", "start_time", "student"],
+            ascending=[True, True, True],
+            na_position="last",
+        )
         
-        for _, row in assignments.iterrows():
-            student_name = student_names.get(
-                row["student_id"],
-                t("unknown_student"),
-            )
+        for _, row in assignment_details_view.iterrows():
+            student_name = row["student"]
 
             course_name = course_titles.get(
                 row["course_id"],
