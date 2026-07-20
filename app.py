@@ -2321,6 +2321,13 @@ elif page == "Courses":
 
     courses_view = courses.copy()
 
+    if not courses_view.empty:
+        courses_view = courses_view.sort_values(
+            by="title",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
     if courses_view.empty:
         st.info(t("no_courses_yet"))
 
