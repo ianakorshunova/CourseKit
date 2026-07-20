@@ -862,6 +862,8 @@ TRANSLATIONS = {
         "dashboard": "首页",
         "students": "学生",
         "student_profile": "学生档案",
+        "no_assignments_for_student": "该学生暂无作业。",
+        "no_progress_for_student": "该学生暂无学习进度记录。",
         "courses": "课程",
         "lessons": "课时",
         "assignments": "作业",
