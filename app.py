@@ -2568,6 +2568,12 @@ elif page == "Lessons":
 
     lessons_view = active_lessons.copy()
 
+    if not lessons_view.empty:
+        lessons_view = lessons_view.sort_values(
+            by=["lesson_date", "start_time"],
+            ascending=[True, True],
+        )
+
     if lessons_view.empty:
         st.info(t("no_lessons_yet"))
 
