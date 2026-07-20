@@ -2624,7 +2624,14 @@ elif page == "Lessons":
     else:
         course_titles = dict(zip(courses["id"], courses["title"]))
 
-        for _, row in lessons.iterrows():
+        lesson_details_view = lessons.copy()
+
+        lesson_details_view = lesson_details_view.sort_values(
+            by=["lesson_date", "start_time"],
+            ascending=[True, True],
+        )
+
+        for _, row in lesson_details_view.iterrows():
             course_name = course_titles.get(
                 row["course_id"],
                 t("unknown_course"),
