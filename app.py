@@ -2705,7 +2705,7 @@ elif page == "Lessons":
 
             course_options[label] = int(row["id"])
         
-        with st.form("add_lesson_form"):
+        with st.form("add_lesson_form", clear_on_submit=True):
             selected_course = st.selectbox(
                 t("course"),
                 list(course_options.keys()),
@@ -2713,7 +2713,10 @@ elif page == "Lessons":
             title = st.text_input(t("lesson_title"))
             lesson_date = st.date_input(t("lesson_date"))
 
-            start_time = st.time_input(t("start_time"))
+            start_time = st.time_input(
+                t("start_time"),
+                step=300,
+            )
             
             duration_minutes = st.number_input(
                 t("duration_minutes"),
