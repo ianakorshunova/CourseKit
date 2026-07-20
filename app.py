@@ -3569,10 +3569,25 @@ elif page == "Progress":
         student_names = dict(zip(students["id"], students["name"]))
         course_titles = dict(zip(courses["id"], courses["title"]))
         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+        lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+        lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
 
         progress_view["student"] = progress_view["student_id"].map(student_names)
         progress_view["course"] = progress_view["course_id"].map(course_titles)
         progress_view["lesson"] = progress_view["lesson_id"].map(lesson_titles)
+        progress_view["lesson_date"] = progress_view["lesson_id"].map(
+            lesson_dates
+        )
+
+        progress_view["start_time"] = progress_view["lesson_id"].map(
+            lesson_times
+        )
+
+        progress_view = progress_view.sort_values(
+            by=["lesson_date", "start_time", "student"],
+            ascending=[True, True, True],
+            na_position="last",
+        )
 
         progress_view["status"] = progress_view["status"].apply(
             lambda value: t(
