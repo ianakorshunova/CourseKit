@@ -2267,6 +2267,25 @@ elif page == "Student Profile":
                 st.write(f"{completed_lessons_count} / {total_lessons_count} lessons completed")
                 st.progress(progress_ratio)
             
+            student_progress_view_source = student_progress.copy()
+
+            lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+            lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
+
+            student_progress_view_source["lesson_date"] = (
+                student_progress_view_source["lesson_id"].map(lesson_dates)
+            )
+
+            student_progress_view_source["start_time"] = (
+                student_progress_view_source["lesson_id"].map(lesson_times)
+            )
+
+            student_progress_view_source = student_progress_view_source.sort_values(
+                by=["lesson_date", "start_time"],
+                ascending=[True, True],
+                na_position="last",
+            )
+            
             student_progress_rows = []
 
             student_course_ids = student_progress["course_id"].dropna().astype(int).unique()
@@ -2291,12 +2310,21 @@ elif page == "Student Profile":
                     student_progress_rows.append(
                         {
                             "course": course_titles.get(course_id, "Unknown course"),
-                             "lesson": lesson_row["title"],
-                             "status": lesson_status,
+                            "lesson": lesson_row["title"],
+                            "status": lesson_status,
+                            "lesson_date": lesson_row["lesson_date"],
+                            "start_time": lesson_row["start_time"],
                         }
                     )
 
                 student_progress_view = pd.DataFrame(student_progress_rows)
+
+                if not student_progress_view.empty:
+                    student_progress_view = student_progress_view.sort_values(
+                        by=["lesson_date", "start_time"],
+                        ascending=[True, True],
+                        na_position="last",
+                    )
 
                 st.dataframe(
                     student_progress_view[["lesson", "status"]],
@@ -2309,7 +2337,7 @@ elif page == "Student Profile":
                 )
 
             with st.expander("Progress details"):
-                for _, row in student_progress.iterrows():
+                for _, row in student_progress_view_source.iterrows():
                     course_name = course_titles.get(row["course_id"], "Unknown course")
                     lesson_name = lesson_titles.get(row["lesson_id"], "Unknown lesson")
 
