@@ -3834,6 +3834,12 @@ elif page == "Student Skills":
     if not student_skills_view.empty and not students.empty:
         student_names = dict(zip(students["id"], students["name"]))
         student_skills_view["student"] = student_skills_view["student_id"].map(student_names)
+
+        student_skills_view = student_skills_view.sort_values(
+            by="student",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
     
         student_skills_view = student_skills_view[
             ["student", "listening", "reading", "speaking", "writing"]
@@ -3876,11 +3882,20 @@ elif page == "Student Skills":
         student_names = dict(zip(students["id"], students["name"]))
         skill_columns = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
 
-        for _, row in student_skills.iterrows():
-            student_name = student_names.get(
-                row["student_id"],
-                t("unknown_student"),
-            )
+        student_skills_details_view = student_skills.copy()
+
+        student_skills_details_view["student"] = (
+            student_skills_details_view["student_id"].map(student_names)
+        )
+
+        student_skills_details_view = student_skills_details_view.sort_values(
+            by="student",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
+        for _, row in student_skills_details_view.iterrows():
+            student_name = row["student"]
 
             scores = {
                 skill: row[skill]
