@@ -1094,6 +1094,16 @@ TRANSLATIONS = {
         "please_confirm_restore": "请先确认恢复。",
         "lesson_restored_successfully": "课时恢复成功！",
 
+        "delete_archived_lesson": "删除已归档课时",
+        "no_archived_lessons_to_delete": "暂无可删除的已归档课时。",
+        "select_archived_lesson_to_delete": "选择要删除的已归档课时",
+        "confirm_delete_archived_lesson": (
+            "我明白，该课时及其相关作业和学习进度记录"
+            "将被永久删除且无法恢复。"
+        ),
+        "please_confirm_lesson_deletion": "请先确认删除课时。",
+        "archived_lesson_deleted_successfully": "已归档课时删除成功！",
+
         "assignment_list": "作业列表",
         "assignment_details": "作业详情",
         "lesson": "课时",
@@ -1249,7 +1259,6 @@ TRANSLATIONS = {
     "archived_lesson_deleted_successfully": "已归档课时删除成功！",
 
 }
-
 
 LANGUAGE_TRANSLATION_KEYS = {
     "English": "language_english",
