@@ -537,6 +537,18 @@ TRANSLATIONS = {
         "progress_completed": "Completed",
 
         "no_courses_yet": "No courses yet.",
+
+        "delete_archived_lesson": "Delete archived lesson",
+        "no_archived_lessons_to_delete": "No archived lessons to delete.",
+        "select_archived_lesson_to_delete": "Select an archived lesson to delete",
+        "confirm_delete_archived_lesson": (
+            "I understand that this lesson and its related assignments "
+            "and progress records will be permanently deleted."
+        ),
+        "please_confirm_lesson_deletion": "Please confirm lesson deletion.",
+        "archived_lesson_deleted_successfully": (
+            "Archived lesson deleted successfully!"
+        ),
     },
 
     "Русский": {
@@ -851,6 +863,16 @@ TRANSLATIONS = {
         "progress_completed": "Завершено",
 
         "no_courses_yet": "Курсов пока нет.",
+
+        "delete_archived_lesson": "Удалить архивный урок",
+        "no_archived_lessons_to_delete": "Нет архивных уроков для удаления.",
+        "select_archived_lesson_to_delete": "Выберите архивный урок для удаления",
+        "confirm_delete_archived_lesson": (
+            "Я понимаю, что урок и связанные с ним домашние задания "
+            "и записи прогресса будут удалены без возможности восстановления."
+        ),
+        "please_confirm_lesson_deletion": "Подтвердите удаление урока.",
+        "archived_lesson_deleted_successfully": "Архивный урок успешно удалён!",
     },
 
     "中文": {
@@ -1214,7 +1236,18 @@ TRANSLATIONS = {
     "progress_in_progress": "进行中",
     "progress_completed": "已完成",
 
-     "no_courses_yet": "暂时还没有课程。",
+    "no_courses_yet": "暂时还没有课程。",
+
+    "delete_archived_lesson": "删除已归档课时",
+    "no_archived_lessons_to_delete": "暂无可删除的已归档课时。",
+    "select_archived_lesson_to_delete": "选择要删除的已归档课时",
+    "confirm_delete_archived_lesson": (
+        "我明白，该课时及其相关作业和学习进度记录"
+        "将被永久删除且无法恢复。"
+    ),
+    "please_confirm_lesson_deletion": "请先确认删除课时。",
+    "archived_lesson_deleted_successfully": "已归档课时删除成功！",
+
 }
 
 
@@ -3105,6 +3138,95 @@ elif page == "Lessons":
                     ).execute()
 
                     st.success(t("lesson_restored_successfully"))
+                    st.rerun()
+
+    st.subheader(t("delete_archived_lesson"))
+
+    archived_lessons_to_delete = lessons[
+        lessons["is_archived"] == True
+    ].copy()
+
+    if archived_lessons_to_delete.empty:
+        st.info(t("no_archived_lessons_to_delete"))
+
+    else:
+        course_titles = dict(
+            zip(courses["id"], courses["title"])
+        )
+
+        delete_archived_lesson_options = {}
+
+        for _, row in archived_lessons_to_delete.iterrows():
+            course_name = course_titles.get(
+                row["course_id"],
+                t("unknown_course"),
+            )
+
+            label = (
+                f"{row['id']} — {row['title']} "
+                f"({course_name})"
+            )
+
+            delete_archived_lesson_options[label] = int(row["id"])
+
+        with st.form("delete_archived_lesson_form"):
+            lesson_to_delete = st.selectbox(
+                t("select_archived_lesson_to_delete"),
+                list(delete_archived_lesson_options.keys()),
+                key="delete_archived_lesson_select",
+            )
+
+            confirm_delete_archived_lesson = st.checkbox(
+                t("confirm_delete_archived_lesson")
+            )
+
+            delete_archived_lesson_submitted = (
+                st.form_submit_button(
+                    t("delete_archived_lesson")
+                )
+            )
+
+            if delete_archived_lesson_submitted:
+                if not confirm_delete_archived_lesson:
+                    st.error(
+                        t("please_confirm_lesson_deletion")
+                    )
+
+                else:
+                    lesson_id_to_delete = (
+                        delete_archived_lesson_options[
+                            lesson_to_delete
+                        ]
+                    )
+
+                    supabase.table("assignments").delete().eq(
+                        "lesson_id",
+                        int(lesson_id_to_delete),
+                    ).eq(
+                        "user_id",
+                        user_id,
+                    ).execute()
+
+                    supabase.table("progress").delete().eq(
+                        "lesson_id",
+                        int(lesson_id_to_delete),
+                    ).eq(
+                        "user_id",
+                        user_id,
+                    ).execute()
+
+                    supabase.table("lessons").delete().eq(
+                        "id",
+                        int(lesson_id_to_delete),
+                    ).eq(
+                        "user_id",
+                        user_id,
+                    ).execute()
+
+                    st.success(
+                        t("archived_lesson_deleted_successfully")
+                    )
+
                     st.rerun()
 
 
