@@ -549,6 +549,36 @@ TRANSLATIONS = {
         "archived_lesson_deleted_successfully": (
             "Archived lesson deleted successfully!"
         ),
+
+        "archive_course": "Archive course",
+        "no_active_courses_to_archive": "No active courses to archive.",
+        "select_course_to_archive": "Select a course to archive",
+        "confirm_archive_course": (
+            "I understand that this course will be archived "
+            "and hidden from the active course list."
+        ),
+        "please_confirm_course_archiving": "Please confirm course archiving.",
+        "archive_course_has_active_lessons": (
+            "Archive all active lessons in this course first."
+        ),
+        "course_archived_successfully": "Course archived successfully!",
+
+        "archived_courses": "Archived courses",
+        "no_archived_courses_yet": "No archived courses yet.",
+
+        "restore_course": "Restore course",
+        "no_archived_courses_to_restore": (
+            "No archived courses to restore."
+        ),
+        "select_course_to_restore": "Select a course to restore",
+        "confirm_restore_course": (
+            "I understand that this course will be restored "
+            "and shown in the active course list again."
+        ),
+        "please_confirm_course_restore": (
+            "Please confirm course restoration."
+        ),
+        "course_restored_successfully": "Course restored successfully!",
     },
 
     "Русский": {
@@ -873,6 +903,36 @@ TRANSLATIONS = {
         ),
         "please_confirm_lesson_deletion": "Подтвердите удаление урока.",
         "archived_lesson_deleted_successfully": "Архивный урок успешно удалён!",
+
+        "archive_course": "Архивировать курс",
+        "no_active_courses_to_archive": "Нет активных курсов для архивации.",
+        "select_course_to_archive": "Выберите курс для архивации",
+        "confirm_archive_course": (
+            "Я понимаю, что курс будет перенесён в архив "
+            "и скрыт из списка активных курсов."
+        ),
+        "please_confirm_course_archiving": "Подтвердите архивацию курса.",
+        "archive_course_has_active_lessons": (
+            "Сначала архивируйте все активные уроки этого курса."
+        ),
+        "course_archived_successfully": "Курс успешно архивирован!",
+
+        "archived_courses": "Архивные курсы",
+        "no_archived_courses_yet": "В архиве пока нет курсов.",
+
+        "restore_course": "Восстановить курс",
+        "no_archived_courses_to_restore": (
+            "Нет архивных курсов для восстановления."
+        ),
+        "select_course_to_restore": "Выберите курс для восстановления",
+        "confirm_restore_course": (
+            "Я понимаю, что курс будет восстановлен "
+            "и снова появится в списке активных курсов."
+        ),
+        "please_confirm_course_restore": (
+            "Подтвердите восстановление курса."
+        ),
+        "course_restored_successfully": "Курс успешно восстановлен!",
     },
 
     "中文": {
@@ -1104,6 +1164,19 @@ TRANSLATIONS = {
         "please_confirm_lesson_deletion": "请先确认删除课时。",
         "archived_lesson_deleted_successfully": "已归档课时删除成功！",
 
+        "archive_course": "归档课程",
+        "no_active_courses_to_archive": "暂无可归档的课程。",
+        "select_course_to_archive": "选择要归档的课程",
+        "confirm_archive_course": (
+            "我明白，该课程将被归档，"
+            "并从当前课程列表中隐藏。"
+        ),
+        "please_confirm_course_archiving": "请先确认归档课程。",
+        "archive_course_has_active_lessons": (
+            "请先归档该课程中的所有当前课时。"
+        ),
+        "course_archived_successfully": "课程归档成功！",
+
         "assignment_list": "作业列表",
         "assignment_details": "作业详情",
         "lesson": "课时",
@@ -1152,6 +1225,19 @@ TRANSLATIONS = {
         "select_assignment_to_delete": "选择要删除的作业",
         "confirm_delete_assignment": "我明白，该作业将被永久删除。",
         "assignment_deleted_successfully": "作业删除成功！",
+
+        "archived_courses": "已归档课程",
+        "no_archived_courses_yet": "暂无已归档课程。",
+
+        "restore_course": "恢复课程",
+        "no_archived_courses_to_restore": "暂无可恢复的已归档课程。",
+        "select_course_to_restore": "选择要恢复的课程",
+        "confirm_restore_course": (
+            "我明白，该课程将被恢复，"
+            "并重新显示在当前课程列表中。"
+        ),
+        "please_confirm_course_restore": "请先确认恢复课程。",
+        "course_restored_successfully": "课程恢复成功！",
     },
 
     "edit_assignment": "编辑作业",
@@ -1310,7 +1396,16 @@ def t(key):
 
 TABLE_COLUMNS = {
     "students": ["id", "user_id", "name", "target_language", "level", "status", "notes"],
-    "courses": ["id", "user_id", "title", "target_language", "instruction_language", "level", "description"],
+    "courses": [
+        "id",
+        "user_id",
+        "title",
+        "target_language",
+        "instruction_language",
+        "level",
+        "description",
+        "is_archived",
+    ],
     "lessons": [
         "id",
         "user_id",
@@ -2396,7 +2491,15 @@ elif page == "Courses":
     st.header(t("courses"))
     st.subheader(t("course_list"))
 
-    courses_view = courses.copy()
+    active_courses = courses[
+        courses["is_archived"] == False
+    ].copy()
+
+    archived_courses = courses[
+        courses["is_archived"] == True
+    ].copy()
+
+    courses_view = active_courses.copy()
 
     if not courses_view.empty:
         courses_view = courses_view.sort_values(
@@ -2514,6 +2617,7 @@ elif page == "Courses":
                     "instruction_language": instruction_language,
                     "level": course_level,
                     "description": description,
+                    "is_archived": False,
                 }
 
                 supabase.table("courses").insert(new_course).execute()
@@ -2523,12 +2627,12 @@ elif page == "Courses":
     
     st.subheader(t("edit_course"))
 
-    if courses.empty:
+    if active_courses.empty:
         st.info(t("no_courses_to_edit"))
     else:
         edit_course_options = {}
 
-        for _, row in courses.iterrows():
+        for _, row in active_courses.iterrows():
             target_language_label = t(
                 LANGUAGE_TRANSLATION_KEYS.get(
                     row["target_language"],
@@ -2559,8 +2663,8 @@ elif page == "Courses":
 
         course_id_to_edit = edit_course_options[selected_course_to_edit]
 
-        course_row = courses[
-            courses["id"].astype(int) == int(course_id_to_edit)
+        course_row = active_courses[
+            active_courses["id"].astype(int) == int(course_id_to_edit)
         ].iloc[0]
 
         language_options = ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
@@ -2642,6 +2746,206 @@ elif page == "Courses":
                     ).execute()
 
                     st.success(t("course_updated_successfully"))
+                    st.rerun()
+
+    st.subheader(t("archive_course"))
+
+    if active_courses.empty:
+        st.info(t("no_active_courses_to_archive"))
+
+    else:
+        archive_course_options = {}
+
+        for _, row in active_courses.iterrows():
+            label = (
+                f"{row['id']} — {row['title']} "
+                f"({row['target_language']} {row['level']})"
+            )
+            archive_course_options[label] = int(row["id"])
+
+        with st.form("archive_course_form"):
+            course_to_archive = st.selectbox(
+                t("select_course_to_archive"),
+                list(archive_course_options.keys()),
+                key="archive_course_select",
+            )
+
+            confirm_archive_course = st.checkbox(
+                t("confirm_archive_course")
+            )
+
+            archive_course_submitted = st.form_submit_button(
+                t("archive_course")
+            )
+
+            if archive_course_submitted:
+                if not confirm_archive_course:
+                    st.error(t("please_confirm_course_archiving"))
+
+                else:
+                    course_id_to_archive = archive_course_options[
+                        course_to_archive
+                    ]
+
+                    course_active_lessons = active_lessons[
+                        active_lessons["course_id"].astype(int)
+                        == int(course_id_to_archive)
+                    ]
+
+                    if not course_active_lessons.empty:
+                        st.error(t("archive_course_has_active_lessons"))
+
+                    else:
+                        supabase.table("courses").update(
+                            {"is_archived": True}
+                        ).eq(
+                            "id",
+                            int(course_id_to_archive),
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        st.success(t("course_archived_successfully"))
+                        st.rerun()
+
+    st.subheader(t("archived_courses"))
+
+    if archived_courses.empty:
+        st.info(t("no_archived_courses_yet"))
+
+    else:
+        archived_courses_view = archived_courses.copy()
+
+        archived_courses_view = archived_courses_view.sort_values(
+            by="title",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
+        archived_courses_view["target_language"] = (
+            archived_courses_view["target_language"].apply(
+                lambda value: t(
+                    LANGUAGE_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
+                )
+                if not pd.isna(value) and str(value).strip() != ""
+                else t("not_specified")
+            )
+        )
+
+        archived_courses_view["instruction_language"] = (
+            archived_courses_view["instruction_language"].apply(
+                lambda value: t(
+                    LANGUAGE_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
+                )
+                if not pd.isna(value) and str(value).strip() != ""
+                else t("not_specified")
+            )
+        )
+
+        archived_courses_view = archived_courses_view[
+            [
+                "title",
+                "target_language",
+                "instruction_language",
+                "level",
+            ]
+        ]
+
+        st.dataframe(
+            archived_courses_view,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "title": st.column_config.TextColumn(
+                    t("title"),
+                    width="large",
+                ),
+                "target_language": st.column_config.TextColumn(
+                    t("target_language"),
+                    width="medium",
+                ),
+                "instruction_language": st.column_config.TextColumn(
+                    t("taught_in"),
+                    width="large",
+                ),
+                "level": st.column_config.TextColumn(
+                    t("level"),
+                    width="small",
+                ),
+            },
+        )
+
+    st.subheader(t("restore_course"))
+
+    if archived_courses.empty:
+        st.info(t("no_archived_courses_to_restore"))
+
+    else:
+        restore_course_options = {}
+
+        archived_courses_for_restore = archived_courses.sort_values(
+            by="title",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
+        for _, row in archived_courses_for_restore.iterrows():
+            target_language_label = t(
+                LANGUAGE_TRANSLATION_KEYS.get(
+                    row["target_language"],
+                    row["target_language"],
+                )
+            )
+
+            label = (
+                f"{row['id']} — {row['title']} "
+                f"({target_language_label} {row['level']})"
+            )
+
+            restore_course_options[label] = int(row["id"])
+
+        with st.form("restore_course_form"):
+            course_to_restore = st.selectbox(
+                t("select_course_to_restore"),
+                list(restore_course_options.keys()),
+                key="restore_course_select",
+            )
+
+            confirm_restore_course = st.checkbox(
+                t("confirm_restore_course")
+            )
+
+            restore_course_submitted = st.form_submit_button(
+                t("restore_course")
+            )
+
+            if restore_course_submitted:
+                if not confirm_restore_course:
+                    st.error(t("please_confirm_course_restore"))
+
+                else:
+                    course_id_to_restore = restore_course_options[
+                        course_to_restore
+                    ]
+
+                    supabase.table("courses").update(
+                        {"is_archived": False}
+                    ).eq(
+                        "id",
+                        int(course_id_to_restore),
+                    ).eq(
+                        "user_id",
+                        user_id,
+                    ).execute()
+
+                    st.success(t("course_restored_successfully"))
                     st.rerun()
 
 elif page == "Lessons":
