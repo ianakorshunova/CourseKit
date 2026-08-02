@@ -579,6 +579,26 @@ TRANSLATIONS = {
             "Please confirm course restoration."
         ),
         "course_restored_successfully": "Course restored successfully!",
+
+        "delete_archived_course": "Delete archived course",
+        "no_archived_courses_to_delete": (
+            "No archived courses to delete."
+        ),
+        "select_archived_course_to_delete": (
+            "Select an archived course to delete"
+        ),
+        "confirm_delete_archived_course": (
+            "I understand that this course will be permanently deleted."
+        ),
+        "please_confirm_course_deletion": (
+            "Please confirm course deletion."
+        ),
+        "course_has_lessons_cannot_delete": (
+            "This course cannot be deleted while lessons are linked to it."
+        ),
+        "archived_course_deleted_successfully": (
+            "Archived course deleted successfully!"
+        ),
     },
 
     "Русский": {
@@ -933,6 +953,22 @@ TRANSLATIONS = {
             "Подтвердите восстановление курса."
         ),
         "course_restored_successfully": "Курс успешно восстановлен!",
+
+        "delete_archived_course": "Удалить архивный курс",
+        "no_archived_courses_to_delete": "Нет архивных курсов для удаления.",
+        "select_archived_course_to_delete": (
+            "Выберите архивный курс для удаления"
+        ),
+        "confirm_delete_archived_course": (
+            "Я понимаю, что курс будет удалён без возможности восстановления."
+        ),
+        "please_confirm_course_deletion": "Подтвердите удаление курса.",
+        "course_has_lessons_cannot_delete": (
+            "Нельзя удалить курс, пока к нему привязаны уроки."
+        ),
+        "archived_course_deleted_successfully": (
+            "Архивный курс успешно удалён!"
+        ),
     },
 
     "中文": {
@@ -1238,6 +1274,20 @@ TRANSLATIONS = {
         ),
         "please_confirm_course_restore": "请先确认恢复课程。",
         "course_restored_successfully": "课程恢复成功！",
+
+        "delete_archived_course": "删除已归档课程",
+        "no_archived_courses_to_delete": "暂无可删除的已归档课程。",
+        "select_archived_course_to_delete": "选择要删除的已归档课程",
+        "confirm_delete_archived_course": (
+            "我明白，该课程将被永久删除且无法恢复。"
+        ),
+        "please_confirm_course_deletion": "请先确认删除课程。",
+        "course_has_lessons_cannot_delete": (
+            "该课程仍有关联课时，无法删除。"
+        ),
+        "archived_course_deleted_successfully": (
+            "已归档课程删除成功！"
+        ),
     },
 
     "edit_assignment": "编辑作业",
@@ -2947,6 +2997,86 @@ elif page == "Courses":
 
                     st.success(t("course_restored_successfully"))
                     st.rerun()
+                    
+    st.subheader(t("delete_archived_course"))
+
+    if archived_courses.empty:
+        st.info(t("no_archived_courses_to_delete"))
+
+    else:
+        delete_archived_course_options = {}
+
+        archived_courses_for_delete = archived_courses.sort_values(
+            by="title",
+            ascending=True,
+            key=lambda column: column.astype(str).str.casefold(),
+        )
+
+        for _, row in archived_courses_for_delete.iterrows():
+            target_language_label = t(
+                LANGUAGE_TRANSLATION_KEYS.get(
+                    row["target_language"],
+                    row["target_language"],
+                )
+            )
+
+            label = (
+                f"{row['id']} — {row['title']} "
+                f"({target_language_label} {row['level']})"
+            )
+
+            delete_archived_course_options[label] = int(row["id"])
+
+        with st.form("delete_archived_course_form"):
+            course_to_delete = st.selectbox(
+                t("select_archived_course_to_delete"),
+                list(delete_archived_course_options.keys()),
+                key="delete_archived_course_select",
+            )
+
+            confirm_delete_archived_course = st.checkbox(
+                t("confirm_delete_archived_course")
+            )
+
+            delete_archived_course_submitted = (
+                st.form_submit_button(
+                    t("delete_archived_course")
+                )
+            )
+
+            if delete_archived_course_submitted:
+                if not confirm_delete_archived_course:
+                    st.error(t("please_confirm_course_deletion"))
+
+                else:
+                    course_id_to_delete = (
+                        delete_archived_course_options[
+                            course_to_delete
+                        ]
+                    )
+
+                    linked_lessons = lessons[
+                        lessons["course_id"].astype(int)
+                        == int(course_id_to_delete)
+                    ]
+
+                    if not linked_lessons.empty:
+                        st.error(t("course_has_lessons_cannot_delete"))
+
+                    else:
+                        supabase.table("courses").delete().eq(
+                            "id",
+                            int(course_id_to_delete),
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        st.success(
+                            t("archived_course_deleted_successfully")
+                        )
+
+                        st.rerun()
 
 elif page == "Lessons":
 
