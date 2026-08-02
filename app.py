@@ -1249,112 +1249,22 @@ TRANSLATIONS = {
         ),
         "sign_up_failed": "注册失败：",
         "session_expired": "登录状态已过期，请重新登录。",
+
+        "assignment_assigned": "已布置",
+        "assignment_submitted": "已提交",
+        "assignment_checked": "已检查",
+        "assignment_needs_revision": "需要修改",
+        "assignment_completed": "已完成",
+
+        "progress_not_started": "未开始",
+        "progress_in_progress": "进行中",
+        "progress_completed": "已完成",
+
+        "skills_profile": "技能档案",
+        "average_skill_score": "平均技能得分",
+        "strongest_skill": "最强技能",
+        "needs_focus": "需要加强",
     },
-
-    "edit_assignment": "编辑作业",
-    "no_assignments_to_edit": "暂无可编辑的作业。",
-    "select_assignment_to_edit": "选择要编辑的作业",
-    "save_assignment_changes": "保存作业修改",
-    "assignment_updated_successfully": "作业更新成功！",
-
-    "delete_assignment": "删除作业",
-    "no_assignments_to_delete": "暂无可删除的作业。",
-    "select_assignment_to_delete": "选择要删除的作业",
-    "confirm_delete_assignment": (
-        "我明白，该作业将被永久删除。"
-    ),
-    "assignment_deleted_successfully": "作业删除成功！",
-
-    "progress_overview": "学习进度概览",
-    "progress_details": "学习进度详情",
-    "no_progress_records_yet": "暂无学习进度记录。",
-    "teacher_comment": "教师评语",
-
-    "add_progress_record": "添加学习进度记录",
-    "add_student_before_progress": (
-        "请先添加学生，再添加学习进度。"
-    ),
-    "add_course_before_progress": (
-        "请先添加课程，再添加学习进度。"
-    ),
-    "add_lesson_before_progress": (
-        "请先添加课时，再添加学习进度。"
-    ),
-    "progress_status": "学习进度状态",
-    "add_progress": "添加学习进度",
-    "add_lesson_for_progress_first": (
-        "请先为该课程添加课时。"
-    ),
-    "progress_added_successfully": "学习进度添加成功！",
-
-    "edit_progress_record": "编辑学习进度记录",
-    "no_progress_records_to_edit": "暂无可编辑的学习进度记录。",
-    "select_progress_record_to_edit": "选择要编辑的学习进度记录",
-    "save_progress_changes": "保存学习进度修改",
-    "progress_updated_successfully": "学习进度更新成功！",
-
-    "delete_progress_record": "删除学习进度记录",
-    "no_progress_records_to_delete": "暂无可删除的学习进度记录。",
-    "select_progress_record_to_delete": "选择要删除的学习进度记录",
-    "confirm_delete_progress": (
-        "我明白，该学习进度记录将被永久删除。"
-    ),
-    "progress_record_deleted_successfully": (
-        "学习进度记录删除成功！"
-    ),
-
-    "skills_overview": "技能概览",
-    "skills_details": "技能详情",
-    "no_skill_records_yet": "暂无技能记录。",
-    "skills_profile": "技能档案",
-    "average_skill_score": "技能平均分",
-
-    "add_student_skills": "添加学生技能",
-    "add_student_before_skills": (
-        "请先添加学生，再添加技能。"
-    ),
-    "add_skills": "添加技能",
-    "student_already_has_skills_profile": (
-        "该学生已有技能档案。"
-    ),
-    "student_skills_added_successfully": (
-        "学生技能添加成功！"
-    ),
-
-    "edit_student_skills": "编辑学生技能",
-    "no_skills_records_to_edit": "暂无可编辑的技能记录。",
-    "select_skills_record_to_edit": "选择要编辑的技能记录",
-    "update_skills": "更新技能",
-    "student_skills_updated_successfully": (
-        "学生技能更新成功！"
-    ),
-
-    "no_assignments_for_student": "该学生暂无作业。",
-
-    "assignment_assigned": "已布置",
-    "assignment_submitted": "已提交",
-    "assignment_checked": "已检查",
-    "assignment_needs_revision": "需要修改",
-    "assignment_completed": "已完成",
-
-    "no_progress_for_student": "该学生暂无学习进度记录。",
-
-    "progress_not_started": "未开始",
-    "progress_in_progress": "进行中",
-    "progress_completed": "已完成",
-
-    "no_courses_yet": "暂时还没有课程。",
-
-    "delete_archived_lesson": "删除已归档课时",
-    "no_archived_lessons_to_delete": "暂无可删除的已归档课时。",
-    "select_archived_lesson_to_delete": "选择要删除的已归档课时",
-    "confirm_delete_archived_lesson": (
-        "我明白，该课时及其相关作业和学习进度记录"
-        "将被永久删除且无法恢复。"
-    ),
-    "please_confirm_lesson_deletion": "请先确认删除课时。",
-    "archived_lesson_deleted_successfully": "已归档课时删除成功！",
-
 }
 
 
@@ -4030,7 +3940,10 @@ elif page == "Assignments":
                 t("assignment_status"),
                 assignment_statuses,
                 format_func=lambda value: t(
-                    ASSIGNMENT_STATUS_TRANSLATION_KEYS[value]
+                    ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
                 ),
             )
 
@@ -4151,7 +4064,10 @@ elif page == "Assignments":
                     else 0
                 ),
                 format_func=lambda value: t(
-                    ASSIGNMENT_STATUS_TRANSLATION_KEYS[value]
+                    ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
                 ),
             )
 
@@ -4443,7 +4359,10 @@ elif page == "Progress":
                 progress_statuses,
                 key="progress_status",
                 format_func=lambda value: t(
-                    PROGRESS_STATUS_TRANSLATION_KEYS[value]
+                    PROGRESS_STATUS_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
                 ),
             )
 
@@ -4511,7 +4430,11 @@ elif page == "Progress":
         ].iloc[0]
 
         with st.form("edit_progress_form"):
-            progress_statuses = ["not started", "in progress", "completed"]
+            progress_statuses = [
+                "not started",
+                "in progress",
+                "completed",
+            ]
 
             edited_progress_status = st.selectbox(
                 t("progress_status"),
@@ -4521,8 +4444,13 @@ elif page == "Progress":
                     if progress_row["status"] in progress_statuses
                     else 0
                 ),
+                format_func=lambda value: t(
+                    PROGRESS_STATUS_TRANSLATION_KEYS.get(
+                        value,
+                        value,
+                    )
+                ),
             )
-
             current_teacher_comment = progress_row["teacher_comment"]
 
             if pd.isna(current_teacher_comment):
