@@ -41,7 +41,6 @@ SKILL_OPTIONS = [
     "Pronunciation",
 ]
 
-
 def parse_skills_focus(value):
     if pd.isna(value) or str(value).strip() in ["", "[]", "None", "nan"]:
         return []
@@ -133,102 +132,6 @@ def course_label(row):
         f"({target_language_label} {level_label} · "
         f"{t('taught_in')} {instruction_language_label})"
     )
-
-def show_auth_screen():
-    st.title("CourseKit 📚")
-    st.subheader("Sign in or create an account")
-
-    auth_tab, signup_tab = st.tabs(["Sign in", "Sign up"])
-
-    with auth_tab:
-        with st.form("sign_in_form"):
-            email = st.text_input("Email", key="sign_in_email")
-            password = st.text_input("Password", type="password", key="sign_in_password")
-            sign_in_submitted = st.form_submit_button("Sign in")
-
-        if sign_in_submitted:
-            if email.strip() == "" or password.strip() == "":
-                st.error("Please enter your email and password.")
-            else:
-                try:
-                    response = sign_in_user(email, password)
-
-                    st.session_state["user"] = response.user
-                    st.session_state["access_token"] = response.session.access_token
-                    st.session_state["refresh_token"] = response.session.refresh_token
-
-                    st.success("Signed in successfully!")
-                    st.rerun()
-                except Exception as error:
-                    st.error(f"Sign in failed: {error}")
-
-    with signup_tab:
-        with st.form("sign_up_form"):
-            email = st.text_input("Email", key="sign_up_email")
-            password = st.text_input("Password", type="password", key="sign_up_password")
-            sign_up_submitted = st.form_submit_button("Create account")
-
-        if sign_up_submitted:
-            if email.strip() == "" or password.strip() == "":
-                st.error("Please enter your email and password.")
-            elif len(password) < 6:
-                st.error("Password should be at least 6 characters long.")
-            else:
-                try:
-                    response = sign_up_user(email, password)
-
-                    if response.session:
-                        st.session_state["user"] = response.user
-                        st.session_state["access_token"] = response.session.access_token
-                        st.session_state["refresh_token"] = response.session.refresh_token
-
-                        st.success("Account created successfully!")
-                        st.rerun()
-                    else:
-                        st.success("Account created. Please check your email to confirm your account.")
-                except Exception as error:
-                    st.error(f"Sign up failed: {error}")
-
-if "user" not in st.session_state:
-    show_auth_screen()
-    st.stop()
-
-if "access_token" in st.session_state and "refresh_token" in st.session_state:
-    try:
-        supabase.auth.set_session(
-            st.session_state["access_token"],
-            st.session_state["refresh_token"]
-        )
-    except Exception:
-        sign_out_user()
-        st.warning("Your session expired. Please sign in again.")
-        show_auth_screen()
-        st.stop()
-
-st.markdown(
-"""
-<div class="hero-card">
-    <div class="hero-content">
-        <div class="hero-main">
-            <p class="eyebrow">Mini LMS · EdTech · Course Management</p>
-            <h1>CourseKit 📚</h1>
-            <p class="hero-text">
-                A lightweight LMS for language teachers to manage courses, lessons,
-                assignments, student skills, and learning progress.
-            </p>
-        </div>
-        <div class="hero-features">
-            <div class="feature-pill">Course planning</div>
-            <div class="feature-pill">Lesson goals</div>
-            <div class="feature-pill">Assignments</div>
-            <div class="feature-pill">Skills tracking</div>
-            <div class="feature-pill">Progress</div>
-        </div>
-    </div>
-</div>
-""",
-unsafe_allow_html=True
-)
 
 TRANSLATIONS = {
     "English": {
@@ -599,6 +502,25 @@ TRANSLATIONS = {
         "archived_course_deleted_successfully": (
             "Archived course deleted successfully!"
         ),
+
+        "auth_subheader": "Sign in or create an account",
+        "sign_in": "Sign in",
+        "sign_up": "Sign up",
+        "email": "Email",
+        "password": "Password",
+        "create_account": "Create account",
+
+        "enter_email_and_password": "Please enter your email and password.",
+        "signed_in_successfully": "Signed in successfully!",
+        "sign_in_failed": "Sign in failed:",
+
+        "password_min_length": "Password should be at least 6 characters long.",
+        "account_created_successfully": "Account created successfully!",
+        "check_email_to_confirm": (
+            "Account created. Please check your email to confirm your account."
+        ),
+        "sign_up_failed": "Sign up failed:",
+        "session_expired": "Your session expired. Please sign in again.",
     },
 
     "Русский": {
@@ -969,6 +891,26 @@ TRANSLATIONS = {
         "archived_course_deleted_successfully": (
             "Архивный курс успешно удалён!"
         ),
+
+        "auth_subheader": "Войдите или создайте аккаунт",
+        "sign_in": "Войти",
+        "sign_up": "Регистрация",
+        "email": "Электронная почта",
+        "password": "Пароль",
+        "create_account": "Создать аккаунт",
+
+        "enter_email_and_password": "Введите электронную почту и пароль.",
+        "signed_in_successfully": "Вход выполнен успешно!",
+        "sign_in_failed": "Не удалось войти:",
+
+        "password_min_length": "Пароль должен содержать не менее 6 символов.",
+        "account_created_successfully": "Аккаунт успешно создан!",
+        "check_email_to_confirm": (
+            "Аккаунт создан. Проверьте электронную почту, "
+            "чтобы подтвердить регистрацию."
+        ),
+        "sign_up_failed": "Не удалось создать аккаунт:",
+        "session_expired": "Сессия истекла. Войдите снова.",
     },
 
     "中文": {
@@ -1288,6 +1230,25 @@ TRANSLATIONS = {
         "archived_course_deleted_successfully": (
             "已归档课程删除成功！"
         ),
+
+        "auth_subheader": "登录或创建账号",
+        "sign_in": "登录",
+        "sign_up": "注册",
+        "email": "电子邮箱",
+        "password": "密码",
+        "create_account": "创建账号",
+
+        "enter_email_and_password": "请输入电子邮箱和密码。",
+        "signed_in_successfully": "登录成功！",
+        "sign_in_failed": "登录失败：",
+
+        "password_min_length": "密码长度至少为6个字符。",
+        "account_created_successfully": "账号创建成功！",
+        "check_email_to_confirm": (
+            "账号已创建。请查看电子邮箱并完成账号确认。"
+        ),
+        "sign_up_failed": "注册失败：",
+        "session_expired": "登录状态已过期，请重新登录。",
     },
 
     "edit_assignment": "编辑作业",
@@ -1396,6 +1357,189 @@ TRANSLATIONS = {
 
 }
 
+
+def t(key):
+    language = st.session_state.get("interface_language", "English")
+
+    return TRANSLATIONS.get(
+        language,
+        TRANSLATIONS["English"],
+    ).get(
+        key,
+        TRANSLATIONS["English"].get(key, key),
+    )
+
+def show_auth_screen():
+    st.title("CourseKit 📚")
+
+    auth_language = st.selectbox(
+        t("interface_language"),
+        ["English", "Русский", "中文"],
+        index=["English", "Русский", "中文"].index(
+            st.session_state.get(
+                "interface_language",
+                "English",
+            )
+        ),
+        key="auth_interface_language",
+    )
+
+    if auth_language != st.session_state.get(
+        "interface_language",
+        "English",
+    ):
+        st.session_state["interface_language"] = auth_language
+        st.rerun()
+
+    st.subheader(t("auth_subheader"))
+
+    auth_tab, signup_tab = st.tabs(
+        [
+            t("sign_in"),
+            t("sign_up"),
+        ]
+    )
+
+    with auth_tab:
+        with st.form("sign_in_form"):
+            email = st.text_input(
+                t("email"),
+                key="sign_in_email",
+            )
+
+            password = st.text_input(
+                t("password"),
+                type="password",
+                key="sign_in_password",
+            )
+
+            sign_in_submitted = st.form_submit_button(
+                t("sign_in")
+            )
+
+        if sign_in_submitted:
+            if email.strip() == "" or password.strip() == "":
+                st.error(t("enter_email_and_password"))
+
+            else:
+                try:
+                    response = sign_in_user(email, password)
+
+                    st.session_state["user"] = response.user
+                    st.session_state["access_token"] = (
+                        response.session.access_token
+                    )
+                    st.session_state["refresh_token"] = (
+                        response.session.refresh_token
+                    )
+
+                    st.success(t("signed_in_successfully"))
+                    st.rerun()
+
+                except Exception as error:
+                    st.error(
+                        f"{t('sign_in_failed')} {error}"
+                    )
+
+    with signup_tab:
+        with st.form("sign_up_form"):
+            signup_email = st.text_input(
+                t("email"),
+                key="sign_up_email",
+            )
+
+            signup_password = st.text_input(
+                t("password"),
+                type="password",
+                key="sign_up_password",
+            )
+
+            sign_up_submitted = st.form_submit_button(
+                t("create_account")
+            )
+
+        if sign_up_submitted:
+            if (
+                signup_email.strip() == ""
+                or signup_password.strip() == ""
+            ):
+                st.error(t("enter_email_and_password"))
+
+            elif len(signup_password) < 6:
+                st.error(t("password_min_length"))
+
+            else:
+                try:
+                    response = sign_up_user(
+                        signup_email,
+                        signup_password,
+                    )
+
+                    if response.session:
+                        st.session_state["user"] = response.user
+                        st.session_state["access_token"] = (
+                            response.session.access_token
+                        )
+                        st.session_state["refresh_token"] = (
+                            response.session.refresh_token
+                        )
+
+                        st.success(
+                            t("account_created_successfully")
+                        )
+                        st.rerun()
+
+                    else:
+                        st.success(
+                            t("check_email_to_confirm")
+                        )
+
+                except Exception as error:
+                    st.error(
+                        f"{t('sign_up_failed')} {error}"
+                    )
+
+if "user" not in st.session_state:
+    show_auth_screen()
+    st.stop()
+
+if "access_token" in st.session_state and "refresh_token" in st.session_state:
+    try:
+        supabase.auth.set_session(
+            st.session_state["access_token"],
+            st.session_state["refresh_token"]
+        )
+    except Exception:
+        sign_out_user()
+        st.warning(t("session_expired"))
+        show_auth_screen()
+        st.stop()
+
+st.markdown(
+"""
+<div class="hero-card">
+    <div class="hero-content">
+        <div class="hero-main">
+            <p class="eyebrow">Mini LMS · EdTech · Course Management</p>
+            <h1>CourseKit 📚</h1>
+            <p class="hero-text">
+                A lightweight LMS for language teachers to manage courses, lessons,
+                assignments, student skills, and learning progress.
+            </p>
+        </div>
+        <div class="hero-features">
+            <div class="feature-pill">Course planning</div>
+            <div class="feature-pill">Lesson goals</div>
+            <div class="feature-pill">Assignments</div>
+            <div class="feature-pill">Skills tracking</div>
+            <div class="feature-pill">Progress</div>
+        </div>
+    </div>
+</div>
+""",
+unsafe_allow_html=True
+)
+
 LANGUAGE_TRANSLATION_KEYS = {
     "English": "language_english",
     "Chinese": "language_chinese",
@@ -1432,17 +1576,6 @@ PROGRESS_STATUS_TRANSLATION_KEYS = {
     "in progress": "progress_in_progress",
     "completed": "progress_completed",
 }
-
-def t(key):
-    language = st.session_state.get("interface_language", "English")
-
-    return TRANSLATIONS.get(
-        language,
-        TRANSLATIONS["English"],
-    ).get(
-        key,
-        TRANSLATIONS["English"].get(key, key),
-    )
 
 TABLE_COLUMNS = {
     "students": ["id", "user_id", "name", "target_language", "level", "status", "notes"],
@@ -2997,7 +3130,7 @@ elif page == "Courses":
 
                     st.success(t("course_restored_successfully"))
                     st.rerun()
-                    
+
     st.subheader(t("delete_archived_course"))
 
     if archived_courses.empty:
@@ -3720,20 +3853,6 @@ elif page == "Assignments":
         assignments_view = assignments_view[
             ["student", "lesson", "status", "evaluation"]
         ]
-
-        # assignments_view["lesson_date"] = assignments_view["lesson_id"].map(
-        #     lesson_dates
-        # )
-
-        # assignments_view["start_time"] = assignments_view["lesson_id"].map(
-        #     lesson_times
-        # )
-
-        # assignments_view = assignments_view.sort_values(
-        #     by=["lesson_date", "start_time", "student"],
-        #     ascending=[True, True, True],
-        #     na_position="last",
-        # )
 
         st.dataframe(
             assignments_view,
