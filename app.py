@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from supabase import create_client
+from datetime import date, datetime
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_ANON_KEY = st.secrets["SUPABASE_ANON_KEY"]
@@ -521,6 +522,27 @@ TRANSLATIONS = {
         ),
         "sign_up_failed": "Sign up failed:",
         "session_expired": "Your session expired. Please sign in again.",
+
+        "save_draft": "Save draft",
+        "draft_saved": "Draft saved successfully.",
+
+        "delete_draft": "Delete draft",
+        "draft_deleted": "Draft deleted.",
+        "draft_restored": "A saved lesson draft was restored.",
+
+        "forgot_password": "Forgot password?",
+        "send_reset_link": "Send reset link",
+        "enter_email": "Enter your email address.",
+        "reset_link_sent": "A password reset link was sent to your email.",
+        "reset_link_failed": "Could not send the reset link:",
+
+        "change_password": "Change password",
+        "new_password": "New password",
+        "confirm_new_password": "Confirm new password",
+        "password_too_short": "Password must contain at least 8 characters.",
+        "passwords_do_not_match": "Passwords do not match.",
+        "password_changed": "Password changed successfully.",
+        "password_change_failed": "Could not change password:",
     },
 
     "Русский": {
@@ -911,6 +933,26 @@ TRANSLATIONS = {
         ),
         "sign_up_failed": "Не удалось создать аккаунт:",
         "session_expired": "Сессия истекла. Войдите снова.",
+
+        "save_draft": "Сохранить черновик",
+        "draft_saved": "Черновик успешно сохранён.",
+        "delete_draft": "Удалить черновик",
+        "draft_deleted": "Черновик удалён.",
+        "draft_restored": "Сохранённый черновик урока восстановлен.",
+
+        "forgot_password": "Забыли пароль?",
+        "send_reset_link": "Отправить ссылку для сброса",
+        "enter_email": "Введите адрес электронной почты.",
+        "reset_link_sent": "Ссылка для сброса пароля отправлена на вашу почту.",
+        "reset_link_failed": "Не удалось отправить ссылку:",
+
+        "change_password": "Изменить пароль",
+        "new_password": "Новый пароль",
+        "confirm_new_password": "Подтвердите новый пароль",
+        "password_too_short": "Пароль должен содержать не менее 8 символов.",
+        "passwords_do_not_match": "Пароли не совпадают.",
+        "password_changed": "Пароль успешно изменён.",
+        "password_change_failed": "Не удалось изменить пароль:",
     },
 
     "中文": {
@@ -1264,6 +1306,26 @@ TRANSLATIONS = {
         "average_skill_score": "平均技能得分",
         "strongest_skill": "最强技能",
         "needs_focus": "需要加强",
+
+        "save_draft": "保存草稿",
+        "draft_saved": "草稿已成功保存。",
+        "delete_draft": "删除草稿",
+        "draft_deleted": "草稿已删除。",
+        "draft_restored": "已恢复保存的课程草稿。",
+
+        "forgot_password": "忘记密码？",
+        "send_reset_link": "发送重置链接",
+        "enter_email": "请输入电子邮箱地址。",
+        "reset_link_sent": "密码重置链接已发送到您的邮箱。",
+        "reset_link_failed": "无法发送重置链接：",
+
+        "change_password": "修改密码",
+        "new_password": "新密码",
+        "confirm_new_password": "确认新密码",
+        "password_too_short": "密码必须至少包含 8 个字符。",
+        "passwords_do_not_match": "两次输入的密码不一致。",
+        "password_changed": "密码已成功修改。",
+        "password_change_failed": "无法修改密码：",
     },
 }
 
@@ -1350,6 +1412,37 @@ def show_auth_screen():
                     st.error(
                         f"{t('sign_in_failed')} {error}"
                     )
+        st.divider()
+
+        with st.expander(t("forgot_password")):
+            reset_email = st.text_input(
+                t("email"),
+                key="reset_password_email",
+            )
+
+            reset_submitted = st.button(
+                t("send_reset_link"),
+                key="send_reset_link_button",
+            )
+
+            if reset_submitted:
+                if reset_email.strip() == "":
+                    st.error(t("enter_email"))
+                else:
+                    try:
+                        supabase.auth.reset_password_for_email(
+                            reset_email.strip(),
+                            {
+                                "redirect_to": "http://localhost:8501",
+                            },
+                        )
+
+                        st.success(t("reset_link_sent"))
+
+                    except Exception as error:
+                        st.error(
+                            f"{t('reset_link_failed')} {error}"
+                        )
 
     with signup_tab:
         with st.form("sign_up_form"):
@@ -1419,7 +1512,7 @@ if "access_token" in st.session_state and "refresh_token" in st.session_state:
             st.session_state["access_token"],
             st.session_state["refresh_token"]
         )
-    except Exception:
+    except Exception as error:
         sign_out_user()
         st.warning(t("session_expired"))
         show_auth_screen()
@@ -1514,6 +1607,22 @@ TABLE_COLUMNS = {
         "homework_template",
         "homework_url",
         "is_archived",
+    ],
+    "lesson_drafts": [
+        "id",
+        "user_id",
+        "course_id",
+        "title",
+        "lesson_date",
+        "start_time",
+        "duration_minutes",
+        "lesson_goal",
+        "skills_focus",
+        "materials",
+        "materials_url",
+        "homework_template",
+        "homework_url",
+        "updated_at",
     ],
     "assignments": [
         "id",
@@ -1685,6 +1794,42 @@ st.sidebar.selectbox(
 st.sidebar.caption(
     f"{t('signed_in_as')}: {current_user.email}"
 )
+
+with st.sidebar.expander(t("change_password")):
+    with st.form("change_password_form"):
+        new_password = st.text_input(
+            t("new_password"),
+            type="password",
+        )
+
+        confirm_password = st.text_input(
+            t("confirm_new_password"),
+            type="password",
+        )
+
+        change_password_submitted = st.form_submit_button(
+            t("change_password")
+        )
+
+    if change_password_submitted:
+        if len(new_password) < 8:
+            st.error(t("password_too_short"))
+
+        elif new_password != confirm_password:
+            st.error(t("passwords_do_not_match"))
+
+        else:
+            try:
+                supabase.auth.update_user(
+                    {"password": new_password}
+                )
+
+                st.success(t("password_changed"))
+
+            except Exception as error:
+                st.error(
+                    f"{t('password_change_failed')} {error}"
+                )
 
 if st.sidebar.button(t("sign_out")):
     sign_out_user()
@@ -3278,29 +3423,116 @@ elif page == "Lessons":
             )
 
             course_options[label] = int(row["id"])
+
+        draft_response = (
+            supabase.table("lesson_drafts")
+            .select("*")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        lesson_draft = (
+            draft_response.data[0]
+            if draft_response.data
+            else {}
+        )
+
+        if lesson_draft:
+            st.info(t("draft_restored"))
+
+        course_labels = list(course_options.keys())
+
+        draft_course_id = lesson_draft.get("course_id")
+
+        draft_course_label = next(
+            (
+                label
+                for label, course_id in course_options.items()
+                if draft_course_id is not None
+                and int(course_id) == int(draft_course_id)
+            ),
+            course_labels[0],
+        )
+
+        draft_course_index = course_labels.index(draft_course_label)
+
+        draft_lesson_date = date.today()
+
+        if lesson_draft.get("lesson_date"):
+            draft_lesson_date = date.fromisoformat(
+                lesson_draft["lesson_date"]
+            )
+
+        draft_start_time = datetime.now().replace(
+            second=0,
+            microsecond=0,
+        ).time()
+
+        if lesson_draft.get("start_time"):
+            draft_start_time = datetime.strptime(
+                lesson_draft["start_time"][:8],
+                "%H:%M:%S",
+            ).time()
+
+        draft_duration = int(
+            lesson_draft.get("duration_minutes") or 60
+        )
+
+        draft_skills = [
+            skill.strip()
+            for skill in (lesson_draft.get("skills_focus") or "").split(",")
+            if skill.strip()
+        ]
+
+        if "lesson_form_version" not in st.session_state:
+            st.session_state["lesson_form_version"] = 0
+
+        form_version = st.session_state["lesson_form_version"]
         
-        with st.form("add_lesson_form", clear_on_submit=True):
+        with st.form(
+            f"add_lesson_form_{st.session_state['lesson_form_version']}",
+            clear_on_submit=False,
+        ):
             selected_course = st.selectbox(
                 t("course"),
-                list(course_options.keys()),
+                course_labels,
+                index=draft_course_index,
+                key=f"lesson_course_{form_version}",
             )
-            title = st.text_input(t("lesson_title"))
-            lesson_date = st.date_input(t("lesson_date"))
+            title = st.text_input(
+                t("lesson_title"),
+                value=lesson_draft.get("title", ""),
+                key=f"lesson_title_{form_version}",
+            )
+
+            lesson_date = st.date_input(
+                t("lesson_date"),
+                value=draft_lesson_date,
+                key=f"lesson_date_{form_version}",
+            )
 
             start_time = st.time_input(
                 t("start_time"),
+                value=draft_start_time,
                 step=300,
+                key=f"lesson_start_time_{form_version}",
             )
-            
+        
             duration_minutes = st.number_input(
                 t("duration_minutes"),
                 min_value=15,
                 max_value=240,
-                value=60,
+                value=draft_duration,
                 step=15,
+                key=f"lesson_duration_{form_version}",
             )
 
-            lesson_goal = st.text_area(t("lesson_goal"))
+            lesson_goal = st.text_area(
+                t("lesson_goal"),
+                value=lesson_draft.get("lesson_goal", ""),
+                key=f"lesson_goal_{form_version}",
+            )
             skill_options = [
                 "listening",
                 "reading",
@@ -3313,19 +3545,105 @@ elif page == "Lessons":
             skills_focus = st.multiselect(
                 t("skills_focus"),
                 skill_options,
+                default=[
+                    skill
+                    for skill in draft_skills
+                    if skill in skill_options
+                ],
                 format_func=lambda value: t(value),
+                key=f"lesson_skills_{form_version}",
             )
 
-            materials = st.text_area(t("materials"))
-            materials_url = st.text_input(t("materials_url"))
-            homework_template = st.text_area(t("homework_template"))
-            homework_url = st.text_input(t("homework_url"))
-            
-            lesson_submitted = st.form_submit_button(
-                t("add_lesson")
+            materials = st.text_area(
+                t("materials"),
+                value=lesson_draft.get("materials", ""),
+                key=f"lesson_materials_{form_version}",
             )
-                        
-            if lesson_submitted:
+
+            materials_url = st.text_input(
+                t("materials_url"),
+                value=lesson_draft.get("materials_url", ""),
+                key=f"lesson_materials_url_{form_version}",
+            )
+
+            homework_template = st.text_area(
+                t("homework_template"),
+                value=lesson_draft.get("homework_template", ""),
+                key=f"lesson_homework_template_{form_version}",
+            )
+
+            homework_url = st.text_input(
+                t("homework_url"),
+                value=lesson_draft.get("homework_url", ""),
+                key=f"lesson_homework_url_{form_version}",
+            )
+
+            draft_col, lesson_col, delete_draft_col = st.columns(
+                [1, 1, 1],
+                gap="small",
+            )
+
+            with draft_col:
+                draft_submitted = st.form_submit_button(
+                    t("save_draft"),
+                    key=f"save_draft_button_{form_version}",
+                    width="stretch",
+                )
+
+            with lesson_col:
+                lesson_submitted = st.form_submit_button(
+                    t("add_lesson"),
+                    key=f"add_lesson_button_{form_version}",
+                    width="stretch",
+                )
+
+            with delete_draft_col:
+                delete_draft_submitted = st.form_submit_button(
+                    t("delete_draft"),
+                    key=f"delete_draft_button_{form_version}",
+                    width="stretch",
+                )
+
+            if draft_submitted:
+                lesson_draft = {
+                    "user_id": user_id,
+                    "course_id": int(course_options[selected_course]),
+                    "title": title,
+                    "lesson_date": str(lesson_date),
+                    "start_time": str(start_time),
+                    "duration_minutes": int(duration_minutes),
+                    "lesson_goal": lesson_goal,
+                    "skills_focus": (
+                        ", ".join(skills_focus)
+                        if isinstance(skills_focus, list)
+                        else skills_focus
+                    ),
+                    "materials": materials,
+                    "materials_url": materials_url,
+                    "homework_template": homework_template,
+                    "homework_url": homework_url,
+                    "updated_at": datetime.now().isoformat(),
+                }
+
+                supabase.table("lesson_drafts").upsert(
+                    lesson_draft,
+                    on_conflict="user_id",
+                ).execute()
+
+                st.success(t("draft_saved"))
+
+            elif delete_draft_submitted:
+                supabase.table("lesson_drafts").delete().eq(
+                    "user_id",
+                    user_id,
+                ).execute()
+
+                st.session_state["lesson_form_version"] += 1
+
+                st.success(t("draft_deleted"))
+                st.rerun()
+                                    
+            elif lesson_submitted:
                 if title.strip() == "":
                     st.error(t("please_enter_lesson_title"))
                 else:
@@ -3346,6 +3664,13 @@ elif page == "Lessons":
                     }
 
                     supabase.table("lessons").insert(new_lesson).execute()
+
+                    supabase.table("lesson_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).execute()
+
+                    st.session_state["lesson_form_version"] += 1
 
                     st.success(t("lesson_added_successfully"))
                     st.rerun()
