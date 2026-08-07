@@ -2,11 +2,58 @@ import streamlit as st
 import pandas as pd
 from supabase import create_client
 from datetime import date, datetime
+from streamlit_js_eval import streamlit_js_eval
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_ANON_KEY = st.secrets["SUPABASE_ANON_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+recovery_data = streamlit_js_eval(
+    js_expressions="""
+        (() => {
+            const params = new URLSearchParams(
+                window.parent.location.hash.substring(1)
+            );
+
+            if (params.get("type") !== "recovery") {
+                return null;
+            }
+
+            return {
+                access_token: params.get("access_token"),
+                refresh_token: params.get("refresh_token")
+            };
+        })()
+    """,
+    key="recovery_session_data",
+)
+
+if (
+    isinstance(recovery_data, dict)
+    and recovery_data.get("access_token")
+    and recovery_data.get("refresh_token")
+    and not st.session_state.get("password_recovery_mode")
+):
+    try:
+        recovery_response = supabase.auth.set_session(
+            recovery_data["access_token"],
+            recovery_data["refresh_token"],
+        )
+
+        st.session_state["user"] = recovery_response.user
+        st.session_state["access_token"] = (
+            recovery_response.session.access_token
+        )
+        st.session_state["refresh_token"] = (
+            recovery_response.session.refresh_token
+        )
+        st.session_state["password_recovery_mode"] = True
+
+        st.rerun()
+
+    except Exception as error:
+        st.error(f"Could not start password recovery: {error}")
 
 def sign_up_user(email, password):
     return supabase.auth.sign_up(
@@ -543,6 +590,15 @@ TRANSLATIONS = {
         "passwords_do_not_match": "Passwords do not match.",
         "password_changed": "Password changed successfully.",
         "password_change_failed": "Could not change password:",
+
+        "reset_password_title": "Reset your password",
+        "reset_password_instructions": "Enter and confirm your new password.",
+        "reset_password": "Reset password",
+        "password_reset_successfully": "Password reset successfully. Sign in with your new password.",
+        "password_reset_failed": "Could not reset password:",
+
+        "password_reset_return_hint": "Reload CourseKit to sign in with your new password."
+
     },
 
     "Русский": {
@@ -953,6 +1009,15 @@ TRANSLATIONS = {
         "passwords_do_not_match": "Пароли не совпадают.",
         "password_changed": "Пароль успешно изменён.",
         "password_change_failed": "Не удалось изменить пароль:",
+
+        "reset_password_title": "Сброс пароля",
+        "reset_password_instructions": "Введите новый пароль и подтвердите его.",
+        "reset_password": "Сбросить пароль",
+        "password_reset_successfully": "Пароль успешно изменён. Войдите с новым паролем.",
+        "password_reset_failed": "Не удалось сбросить пароль:",
+
+        "password_reset_return_hint": "Перезагрузите CourseKit и войдите с новым паролем."
+
     },
 
     "中文": {
@@ -1326,9 +1391,17 @@ TRANSLATIONS = {
         "passwords_do_not_match": "两次输入的密码不一致。",
         "password_changed": "密码已成功修改。",
         "password_change_failed": "无法修改密码：",
+
+        "reset_password_title": "重置密码",
+        "reset_password_instructions": "请输入并确认您的新密码。",
+        "reset_password": "重置密码",
+        "password_reset_successfully": "密码已成功重置。请使用新密码登录。",
+        "password_reset_failed": "无法重置密码：",
+
+        "password_reset_return_hint": "请重新加载 CourseKit，然后使用新密码登录。"
+
     },
 }
-
 
 def t(key):
     language = st.session_state.get("interface_language", "English")
@@ -1340,6 +1413,66 @@ def t(key):
         key,
         TRANSLATIONS["English"].get(key, key),
     )
+
+if st.session_state.get("password_recovery_mode"):
+    st.title(t("reset_password_title"))
+    st.info(t("reset_password_instructions"))
+
+    with st.form("reset_password_form"):
+        new_password = st.text_input(
+            t("new_password"),
+            type="password",
+            key="recovery_new_password",
+        )
+
+        confirm_password = st.text_input(
+            t("confirm_new_password"),
+            type="password",
+            key="recovery_confirm_password",
+        )
+
+        reset_password_submitted = st.form_submit_button(
+            t("reset_password"),
+            width="stretch",
+        )
+
+    if reset_password_submitted:
+        if len(new_password) < 8:
+            st.error(t("password_too_short"))
+
+        elif new_password != confirm_password:
+            st.error(t("passwords_do_not_match"))
+
+        else:
+            try:
+                recovery_session = supabase.auth.set_session(
+                    st.session_state["access_token"],
+                    st.session_state["refresh_token"],
+                )
+
+                st.session_state["access_token"] = (
+                    recovery_session.session.access_token
+                )
+                st.session_state["refresh_token"] = (
+                    recovery_session.session.refresh_token
+                )
+
+                supabase.auth.update_user(
+                    {"password": new_password}
+                )
+
+                st.session_state["password_reset_complete"] = True
+                st.rerun()
+
+            except Exception as error:
+                st.error(
+                    f"{t('password_reset_failed')} {error}"
+                )
+
+    if st.session_state.get("password_reset_complete"):
+        st.success(t("password_reset_successfully"))
+        st.info(t("password_reset_return_hint"))
+        st.stop()
 
 def show_auth_screen():
     st.title("CourseKit 📚")
