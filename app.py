@@ -1757,6 +1757,39 @@ TABLE_COLUMNS = {
         "homework_url",
         "updated_at",
     ],
+    "course_drafts": [
+        "id",
+        "user_id",
+        "title",
+        "target_language",
+        "instruction_language",
+        "level",
+        "description",
+        "updated_at",
+    ],
+    "student_drafts": [
+        "id",
+        "user_id",
+        "name",
+        "target_language",
+        "level",
+        "status",
+        "notes",
+        "updated_at",
+    ],
+    "skill_drafts": [
+        "id",
+        "user_id",
+        "student_id",
+        "listening",
+        "reading",
+        "speaking",
+        "writing",
+        "grammar",
+        "vocabulary",
+        "comments",
+        "updated_at",
+    ],
     "assignments": [
         "id",
         "user_id",
@@ -2200,55 +2233,190 @@ elif page == "Students":
             ),
         }
     )
+
+    student_draft_response = (
+        supabase.table("student_drafts")
+        .select("*")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    student_draft = (
+        student_draft_response.data[0]
+        if student_draft_response.data
+        else {}
+    )
+
+    language_options = [
+        "English",
+        "Chinese",
+        "Russian",
+        "German",
+        "Spanish",
+        "Other",
+    ]
+
+    student_level_options = [
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "C1",
+        "C2",
+    ]
+
+    student_status_options = [
+        "active",
+        "paused",
+        "completed",
+    ]
+
+    draft_student_name = student_draft.get("name") or ""
+    draft_student_notes = student_draft.get("notes") or ""
+
+    draft_student_language = student_draft.get(
+        "target_language",
+        "English",
+    )
+
+    draft_student_level = student_draft.get(
+        "level",
+        "A1",
+    )
+
+    draft_student_status = student_draft.get(
+        "status",
+        "active",
+    )
+
+    student_language_index = (
+        language_options.index(draft_student_language)
+        if draft_student_language in language_options
+        else 0
+    )
+
+    student_level_index = (
+        student_level_options.index(draft_student_level)
+        if draft_student_level in student_level_options
+        else 0
+    )
+
+    student_status_index = (
+        student_status_options.index(draft_student_status)
+        if draft_student_status in student_status_options
+        else 0
+    )
+
+    if student_draft:
+        st.info(t("draft_restored"))
     
     st.subheader(t("add_new_student"))
 
-    with st.form("add_student_form"):
-        name = st.text_input(t("student_name"))
+    if "student_form_version" not in st.session_state:
+        st.session_state["student_form_version"] = 0
 
-        language_options = [
-            "English",
-            "Chinese",
-            "Russian",
-            "German",
-            "Spanish",
-            "Other",
-        ]
+    student_form_version = st.session_state["student_form_version"]
+
+    with st.form(
+        f"add_student_form_{student_form_version}",
+        clear_on_submit=False,
+    ):
+
+        name = st.text_input(
+            t("student_name"),
+            value=draft_student_name,
+            key=f"student_name_{student_form_version}",
+        )
 
         language = st.selectbox(
             t("language"),
             language_options,
+            index=student_language_index,
             format_func=lambda value: t(
                 LANGUAGE_TRANSLATION_KEYS[value]
             ),
+            key=f"student_language_{student_form_version}",
         )
 
         level = st.selectbox(
             t("level"),
-            ["A1", "A2", "B1", "B2", "C1", "C2"],
+            student_level_options,
+            index=student_level_index,
+            key=f"student_level_{student_form_version}",
         )
-
-        student_status_options = [
-            "active",
-            "paused",
-            "completed",
-        ]
 
         status = st.selectbox(
             t("status"),
             student_status_options,
+            index=student_status_index,
             format_func=lambda value: t(
                 STUDENT_STATUS_TRANSLATION_KEYS[value]
             ),
+            key=f"student_status_{student_form_version}",
         )
 
-        notes = st.text_area(t("notes"))
-
-        submitted = st.form_submit_button(
-            t("add_student")
+        notes = st.text_area(
+            t("notes"),
+            value=draft_student_notes,
+            key=f"student_notes_{student_form_version}",
         )
 
-        if submitted:
+        save_student_draft_col, add_student_col, delete_student_draft_col = st.columns(
+            [1, 1, 1],
+            gap="small",
+        )
+
+        with save_student_draft_col:
+            student_draft_submitted = st.form_submit_button(
+                t("save_draft"),
+                key=f"save_student_draft_button_{student_form_version}",
+                width="stretch",
+            )
+
+        with add_student_col:
+            submitted = st.form_submit_button(
+                t("add_student"),
+                key=f"add_student_button_{student_form_version}",
+                width="stretch",
+            )
+
+        with delete_student_draft_col:
+            delete_student_draft_submitted = st.form_submit_button(
+                t("delete_draft"),
+                key=f"delete_student_draft_button_{student_form_version}",
+                width="stretch",
+            )
+
+        if student_draft_submitted:
+            student_draft_data = {
+                "user_id": user_id,
+                "name": name,
+                "target_language": language,
+                "level": level,
+                "status": status,
+                "notes": notes,
+            }
+
+            supabase.table("student_drafts").upsert(
+                student_draft_data,
+                on_conflict="user_id",
+            ).execute()
+
+            st.success(t("draft_saved"))
+
+        elif delete_student_draft_submitted:
+            supabase.table("student_drafts").delete().eq(
+                "user_id",
+                user_id,
+            ).execute()
+
+            st.session_state["student_form_version"] += 1
+
+            st.success(t("draft_deleted"))
+            st.rerun()
+
+        elif submitted:
             if name.strip() == "":
                 st.error(t("please_enter_student_name"))
             else:
@@ -2262,6 +2430,13 @@ elif page == "Students":
                 }
 
                 supabase.table("students").insert(new_student).execute()
+
+                supabase.table("student_drafts").delete().eq(
+                    "user_id",
+                    user_id,
+                ).execute()
+
+                st.session_state["student_form_version"] += 1
 
                 st.success(t("student_added_successfully"))
                 st.rerun()
@@ -2932,52 +3107,184 @@ elif page == "Courses":
                 ),
             },
         )
+
+    course_draft_response = (
+        supabase.table("course_drafts")
+        .select("*")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    course_draft = (
+            course_draft_response.data[0]
+            if course_draft_response.data
+            else {}
+        )
+
+    if course_draft:
+        st.info(t("draft_restored"))
+
+    course_language_options = [
+        "English",
+        "Chinese",
+        "Russian",
+        "German",
+        "Spanish",
+        "Other",
+    ]
+
+    course_level_options = [
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "C1",
+        "C2",
+    ]
+
+    draft_target_language = course_draft.get(
+        "target_language",
+        "English",
+    )
+
+    draft_instruction_language = course_draft.get(
+        "instruction_language",
+        "English",
+    )
+
+    draft_level = course_draft.get(
+        "level",
+        "A1",
+    )
+
+    target_language_index = (
+        course_language_options.index(draft_target_language)
+        if draft_target_language in course_language_options
+        else 0
+    )
+
+    instruction_language_index = (
+        course_language_options.index(draft_instruction_language)
+        if draft_instruction_language in course_language_options
+        else 0
+    )
+
+    course_level_index = (
+        course_level_options.index(draft_level)
+        if draft_level in course_level_options
+        else 0
+    )
+
+    draft_course_title = course_draft.get("title") or ""
+    draft_description = course_draft.get("description") or ""
     
     st.subheader(t("add_new_course"))
 
-    with st.form("add_course_form"):
-        title = st.text_input(t("course_title"))
+    if "course_form_version" not in st.session_state:
+        st.session_state["course_form_version"] = 0
 
-        course_language_options = [
-            "English",
-            "Chinese",
-            "Russian",
-            "German",
-            "Spanish",
-            "Other",
-        ]
+    course_form_version = st.session_state["course_form_version"]
+
+    with st.form(
+        f"add_course_form_{course_form_version}",
+        clear_on_submit=False,
+    ):
+
+        title = st.text_input(
+            t("course_title"),
+            value=draft_course_title,
+            key=f"course_title_{course_form_version}",
+        )
 
         course_language = st.selectbox(
             t("target_language"),
             course_language_options,
+            index=target_language_index,
             format_func=lambda value: t(
                 LANGUAGE_TRANSLATION_KEYS[value]
             ),
+            key=f"course_target_language_{course_form_version}",
         )
 
         instruction_language = st.selectbox(
             t("instruction_language"),
             course_language_options,
+            index=instruction_language_index,
             format_func=lambda value: t(
                 LANGUAGE_TRANSLATION_KEYS[value]
             ),
+            key=f"course_instruction_language_{course_form_version}",
         )
 
         course_level = st.selectbox(
             t("course_level"),
-            ["A1", "A2", "B1", "B2", "C1", "C2"],
-            key="course_level",
+            course_level_options,
+            index=course_level_index,
+            key=f"course_level_{course_form_version}",
         )
 
         description = st.text_area(
-            t("course_description")
+            t("course_description"),
+            value=draft_description,
+            key=f"course_description_{course_form_version}",
         )
 
-        course_submitted = st.form_submit_button(
-            t("add_course")
+        save_draft_col, add_course_col, delete_draft_col = st.columns(
+            [1, 1, 1],
+            gap="small",
         )
 
-        if course_submitted:
+        with save_draft_col:
+            course_draft_submitted = st.form_submit_button(
+                t("save_draft"),
+                key=f"save_course_draft_button_{course_form_version}",
+                width="stretch",
+            )
+
+        with add_course_col:
+            course_submitted = st.form_submit_button(
+                t("add_course"),
+                key=f"add_course_button_{course_form_version}",
+                width="stretch",
+            )
+
+        with delete_draft_col:
+            delete_course_draft_submitted = st.form_submit_button(
+                t("delete_draft"),
+                key=f"delete_course_draft_button_{course_form_version}",
+                width="stretch",
+            )
+
+        if course_draft_submitted:
+            course_draft_data = {
+                "user_id": user_id,
+                "title": title,
+                "target_language": course_language,
+                "instruction_language": instruction_language,
+                "level": course_level,
+                "description": description,
+            }
+
+            supabase.table("course_drafts").upsert(
+                course_draft_data,
+                on_conflict="user_id",
+            ).execute()
+
+            st.success(t("draft_saved"))
+
+        elif delete_course_draft_submitted:
+            supabase.table("course_drafts").delete().eq(
+                "user_id",
+                user_id,
+            ).execute()
+
+            st.session_state["course_form_version"] += 1
+
+            st.success(t("draft_deleted"))
+            st.rerun()
+
+        elif course_submitted:
             if title.strip() == "":
                 st.error(t("please_enter_course_title"))
             else:
@@ -2993,9 +3300,16 @@ elif page == "Courses":
 
                 supabase.table("courses").insert(new_course).execute()
 
+                supabase.table("course_drafts").delete().eq(
+                    "user_id",
+                    user_id,
+                ).execute()
+
+                st.session_state["course_form_version"] += 1
+
                 st.success(t("course_added_successfully"))
                 st.rerun()
-    
+            
     st.subheader(t("edit_course"))
 
     if active_courses.empty:
@@ -5144,37 +5458,177 @@ elif page == "Student Skills":
             for _, row in students.iterrows()
         }
 
-        with st.form("add_student_skills_form"):
-            selected_student = st.selectbox(
-                t("student"),
-                list(student_options.keys()),
-                key="skills_student_select",
+        selected_student = st.selectbox(
+            t("student"),
+            list(student_options.keys()),
+            key="skills_student_select",
+        )
+
+        selected_student_id = int(
+            student_options[selected_student]
+        )
+
+        skill_draft_response = (
+            supabase.table("skill_drafts")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("student_id", selected_student_id)
+            .limit(1)
+            .execute()
+        )
+
+        skill_draft = (
+            skill_draft_response.data[0]
+            if skill_draft_response.data
+            else {}
+        )
+
+        if skill_draft:
+            st.info(t("draft_restored"))
+
+        draft_listening = int(skill_draft.get("listening") or 3)
+        draft_reading = int(skill_draft.get("reading") or 3)
+        draft_speaking = int(skill_draft.get("speaking") or 3)
+        draft_writing = int(skill_draft.get("writing") or 3)
+        draft_grammar = int(skill_draft.get("grammar") or 3)
+        draft_vocabulary = int(skill_draft.get("vocabulary") or 3)
+        draft_comments = skill_draft.get("comments") or ""
+
+        if "skills_form_version" not in st.session_state:
+            st.session_state["skills_form_version"] = 0
+
+        skills_form_version = st.session_state["skills_form_version"]
+
+        with st.form(
+            f"add_student_skills_form_{selected_student_id}_{skills_form_version}",
+            clear_on_submit=False,
+        ):
+            listening = st.slider(
+                t("listening"),
+                1,
+                5,
+                draft_listening,
+                key=f"skills_listening_{selected_student_id}_{skills_form_version}",
+            )
+            reading = st.slider(
+                t("reading"),
+                1,
+                5,
+                draft_reading,
+                key=f"skills_reading_{selected_student_id}_{skills_form_version}",
             )
 
-            listening = st.slider(t("listening"), 1, 5, 3)
-            reading = st.slider(t("reading"), 1, 5, 3)
-            speaking = st.slider(t("speaking"), 1, 5, 3)
-            writing = st.slider(t("writing"), 1, 5, 3)
-            grammar = st.slider(t("grammar"), 1, 5, 3)
-            vocabulary = st.slider(t("vocabulary"), 1, 5, 3)
-
-            comments = st.text_area(t("comments"))
-
-            skills_submitted = st.form_submit_button(
-                t("add_skills")
+            speaking = st.slider(
+                t("speaking"),
+                1,
+                5,
+                draft_speaking,
+                key=f"skills_speaking_{selected_student_id}_{skills_form_version}",
             )
 
-            if skills_submitted:
+            writing = st.slider(
+                t("writing"),
+                1,
+                5,
+                draft_writing,
+                key=f"skills_writing_{selected_student_id}_{skills_form_version}",
+            )
+
+            grammar = st.slider(
+                t("grammar"),
+                1,
+                5,
+                draft_grammar,
+                key=f"skills_grammar_{selected_student_id}_{skills_form_version}",
+            )
+
+            vocabulary = st.slider(
+                t("vocabulary"),
+                1,
+                5,
+                draft_vocabulary,
+                key=f"skills_vocabulary_{selected_student_id}_{skills_form_version}",
+            )
+
+            comments = st.text_area(
+                t("comments"),
+                value=draft_comments,
+                key=f"skills_comments_{selected_student_id}_{skills_form_version}",
+            )
+
+            save_skills_draft_col, add_skills_col, delete_skills_draft_col = st.columns(
+                [1, 1, 1],
+                gap="small",
+            )
+
+            with save_skills_draft_col:
+                skills_draft_submitted = st.form_submit_button(
+                    t("save_draft"),
+                    key=f"save_skills_draft_button_{selected_student_id}_{skills_form_version}",
+                    width="stretch",
+                )
+
+            with add_skills_col:
+                skills_submitted = st.form_submit_button(
+                    t("add_skills"),
+                    key=f"add_skills_button_{selected_student_id}_{skills_form_version}",
+                    width="stretch",
+                )
+
+            with delete_skills_draft_col:
+                delete_skills_draft_submitted = st.form_submit_button(
+                    t("delete_draft"),
+                    key=f"delete_skills_draft_button_{selected_student_id}_{skills_form_version}",
+                    width="stretch",
+                )
+
+            if skills_draft_submitted:
+                skill_draft_data = {
+                    "user_id": user_id,
+                    "student_id": selected_student_id,
+                    "listening": listening,
+                    "reading": reading,
+                    "speaking": speaking,
+                    "writing": writing,
+                    "grammar": grammar,
+                    "vocabulary": vocabulary,
+                    "comments": comments,
+                }
+
+                supabase.table("skill_drafts").upsert(
+                    skill_draft_data,
+                    on_conflict="user_id,student_id",
+                ).execute()
+
+                st.success(t("draft_saved"))
+
+            elif delete_skills_draft_submitted:
+                supabase.table("skill_drafts").delete().eq(
+                    "user_id",
+                    user_id,
+                ).eq(
+                    "student_id",
+                    selected_student_id,
+                ).execute()
+
+                st.session_state["skills_form_version"] += 1
+
+                st.success(t("draft_deleted"))
+                st.rerun()
+
+            elif skills_submitted:
                 existing_skill = student_skills[
-                    student_skills["student_id"].astype(int) == int(student_options[selected_student])
+                    student_skills["student_id"].astype(int)
+                    == int(selected_student_id)
                 ]
 
                 if not existing_skill.empty:
                     st.error(t("student_already_has_skills_profile"))
+
                 else:
                     new_skill = {
                         "user_id": user_id,
-                        "student_id": int(student_options[selected_student]),
+                        "student_id": selected_student_id,
                         "listening": listening,
                         "reading": reading,
                         "speaking": speaking,
@@ -5184,7 +5638,19 @@ elif page == "Student Skills":
                         "comments": comments,
                     }
 
-                    supabase.table("student_skills").insert(new_skill).execute()
+                    supabase.table("student_skills").insert(
+                        new_skill
+                    ).execute()
+
+                    supabase.table("skill_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).eq(
+                        "student_id",
+                        selected_student_id,
+                    ).execute()
+
+                    st.session_state["skills_form_version"] += 1
 
                     st.success(t("student_skills_added_successfully"))
                     st.rerun()
