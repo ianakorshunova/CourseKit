@@ -1790,6 +1790,28 @@ TABLE_COLUMNS = {
         "comments",
         "updated_at",
     ],
+    "assignment_drafts": [
+        "id",
+        "user_id",
+        "student_id",
+        "course_id",
+        "lesson_id",
+        "homework",
+        "status",
+        "evaluation",
+        "comments",
+        "updated_at",
+    ],
+    "progress_drafts": [
+        "id",
+        "user_id",
+        "student_id",
+        "course_id",
+        "lesson_id",
+        "status",
+        "teacher_comment",
+        "updated_at",
+    ],
     "assignments": [
         "id",
         "user_id",
@@ -4674,6 +4696,8 @@ elif page == "Assignments":
             
         selected_course_id = course_options[selected_course]
 
+        selected_student_id = int(student_options[selected_student])
+
         filtered_lessons = active_lessons[
             active_lessons["course_id"].astype(int) == int(selected_course_id)
         ]
@@ -4693,75 +4717,217 @@ elif page == "Assignments":
                 list(lesson_options.keys()),
                 key="assignment_lesson",
             )
-            
-        with st.form("add_assignment_form"):
+        selected_lesson_id = (
+            int(lesson_options[selected_lesson])
+            if selected_lesson is not None
+            else None
+        )
+        
+        assignment_draft = {}
 
-            homework = st.text_area(
-                t("homework")
+        if selected_lesson_id is not None:
+            assignment_draft_response = (
+                supabase.table("assignment_drafts")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("student_id", selected_student_id)
+                .eq("lesson_id", selected_lesson_id)
+                .limit(1)
+                .execute()
             )
 
-            assignment_statuses = [
-                "assigned",
-                "submitted",
-                "checked",
-                "needs revision",
-                "completed",
-            ]
+            assignment_draft = (
+                assignment_draft_response.data[0]
+                if assignment_draft_response.data
+                else {}
+            )
+
+        if assignment_draft:
+            st.info(t("draft_restored"))
+
+        draft_homework = assignment_draft.get("homework") or ""
+
+        draft_status = assignment_draft.get("status") or "assigned"
+
+        draft_evaluation = (
+            assignment_draft.get("evaluation")
+            or "not evaluated"
+        )
+
+        draft_comments = assignment_draft.get("comments") or ""
+
+        assignment_statuses = [
+            "assigned",
+            "submitted",
+            "checked",
+            "needs revision",
+            "completed",
+        ]
+
+        evaluation_options = [
+            "not evaluated",
+            "excellent",
+            "good",
+            "satisfactory",
+            "needs improvement",
+        ]
+
+        draft_status_index = (
+            assignment_statuses.index(draft_status)
+            if draft_status in assignment_statuses
+            else 0
+        )
+
+        draft_evaluation_index = (
+            evaluation_options.index(draft_evaluation)
+            if draft_evaluation in evaluation_options
+            else 0
+        )
+
+        if "assignment_form_version" not in st.session_state:
+            st.session_state["assignment_form_version"] = 0
+
+        assignment_form_version = st.session_state["assignment_form_version"]
+            
+        with st.form(
+            f"add_assignment_form_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+            clear_on_submit=False,
+        ):
+            homework = st.text_area(
+                t("homework"),
+                value=draft_homework,
+                key=f"assignment_homework_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+            )
 
             status = st.selectbox(
                 t("assignment_status"),
                 assignment_statuses,
+                index=draft_status_index,
                 format_func=lambda value: t(
                     ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
                         value,
                         value,
                     )
                 ),
+                key=f"assignment_status_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
             )
-
-            evaluation_options = [
-                "not evaluated",
-                "excellent",
-                "good",
-                "satisfactory",
-                "needs improvement",
-            ]
 
             evaluation = st.selectbox(
                 t("evaluation"),
                 evaluation_options,
+                index=draft_evaluation_index,
                 format_func=lambda value: t(
                     EVALUATION_TRANSLATION_KEYS[value]
                 ),
+                key=f"assignment_evaluation_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
             )
 
             comments = st.text_area(
-                t("teacher_comments")
+                t("teacher_comments"),
+                value=draft_comments,
+                key=f"assignment_comments_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
             )
 
-            assignment_submitted = st.form_submit_button(
-                t("add_assignment")
+            save_assignment_draft_col, add_assignment_col, delete_assignment_draft_col = st.columns(
+                [1, 1, 1],
+                gap="small",
             )
 
-            if assignment_submitted:
-                if selected_lesson is None:
+            with save_assignment_draft_col:
+                assignment_draft_submitted = st.form_submit_button(
+                    t("save_draft"),
+                    key=f"save_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                    width="stretch",
+                )
+
+            with add_assignment_col:
+                assignment_submitted = st.form_submit_button(
+                    t("add_assignment"),
+                    key=f"add_assignment_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                    width="stretch",
+                )
+
+            with delete_assignment_draft_col:
+                delete_assignment_draft_submitted = st.form_submit_button(
+                    t("delete_draft"),
+                    key=f"delete_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                    width="stretch",
+                )
+
+            if assignment_draft_submitted:
+                if selected_lesson_id is None:
                     st.error(t("add_lesson_for_course_first"))
-
-                elif homework.strip() == "":
-                    st.error(t("please_enter_homework_task"))
                 else:
-                    new_assignment = {
+                    assignment_draft_data = {
                         "user_id": user_id,
-                        "student_id": int(student_options[selected_student]),
+                        "student_id": selected_student_id,
                         "course_id": int(selected_course_id),
-                        "lesson_id": int(lesson_options[selected_lesson]),
+                        "lesson_id": selected_lesson_id,
                         "homework": homework,
                         "status": status,
                         "evaluation": evaluation,
                         "comments": comments,
                     }
 
-                    supabase.table("assignments").insert(new_assignment).execute()
+                    supabase.table("assignment_drafts").upsert(
+                        assignment_draft_data,
+                        on_conflict="user_id,student_id,lesson_id",
+                    ).execute()
+
+                    st.success(t("draft_saved"))
+
+            elif delete_assignment_draft_submitted:
+                if selected_lesson_id is not None:
+                    supabase.table("assignment_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).eq(
+                        "student_id",
+                        selected_student_id,
+                    ).eq(
+                        "lesson_id",
+                        selected_lesson_id,
+                    ).execute()
+
+                st.session_state["assignment_form_version"] += 1
+                st.success(t("draft_deleted"))
+                st.rerun()
+
+            elif assignment_submitted:
+                if selected_lesson is None:
+                    st.error(t("add_lesson_for_course_first"))
+
+                elif homework.strip() == "":
+                    st.error(t("please_enter_homework_task"))
+
+                else:
+                    new_assignment = {
+                        "user_id": user_id,
+                        "student_id": selected_student_id,
+                        "course_id": int(selected_course_id),
+                        "lesson_id": selected_lesson_id,
+                        "homework": homework,
+                        "status": status,
+                        "evaluation": evaluation,
+                        "comments": comments,
+                    }
+
+                    supabase.table("assignments").insert(
+                        new_assignment
+                    ).execute()
+
+                    supabase.table("assignment_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).eq(
+                        "student_id",
+                        selected_student_id,
+                    ).eq(
+                        "lesson_id",
+                        selected_lesson_id,
+                    ).execute()
+
+                    st.session_state["assignment_form_version"] += 1
 
                     st.success(t("assignment_added_successfully"))
                     st.rerun()
@@ -5099,6 +5265,8 @@ elif page == "Progress":
 
         selected_course_id = course_options[selected_course]
 
+        selected_student_id = int(student_options[selected_student])
+
         filtered_lessons = active_lessons[
             active_lessons["course_id"].astype(int) == int(selected_course_id)
         ]
@@ -5118,18 +5286,70 @@ elif page == "Progress":
                 list(lesson_options.keys()),
                 key="progress_lesson",
             )
+        selected_lesson_id = (
+            int(lesson_options[selected_lesson])
+            if selected_lesson is not None
+            else None
+        )
 
-        with st.form("add_progress_form"):
-            progress_statuses = [
-                "not started",
-                "in progress",
-                "completed",
-            ]
+        progress_draft = {}
 
+        if selected_lesson_id is not None:
+            progress_draft_response = (
+                supabase.table("progress_drafts")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("student_id", selected_student_id)
+                .eq("lesson_id", selected_lesson_id)
+                .limit(1)
+                .execute()
+            )
+
+            progress_draft = (
+                progress_draft_response.data[0]
+                if progress_draft_response.data
+                else {}
+            )
+
+        if progress_draft:
+            st.info(t("draft_restored"))
+
+        draft_progress_status = (
+            progress_draft.get("status")
+            or "not started"
+        )
+
+        draft_teacher_comment = (
+            progress_draft.get("teacher_comment")
+            or ""
+        )
+
+        progress_statuses = [
+            "not started",
+            "in progress",
+            "completed",
+        ]
+
+        draft_progress_status_index = (
+            progress_statuses.index(draft_progress_status)
+            if draft_progress_status in progress_statuses
+            else 0
+        )
+
+        if "progress_form_version" not in st.session_state:
+            st.session_state["progress_form_version"] = 0
+
+        progress_form_version = st.session_state["progress_form_version"]
+
+        with st.form(
+            f"add_progress_form_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
+            clear_on_submit=False,
+        ):
             status = st.selectbox(
                 t("progress_status"),
                 progress_statuses,
-                key="progress_status",
+                index=draft_progress_status_index,
+                key=f"progress_status_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
                 format_func=lambda value: t(
                     PROGRESS_STATUS_TRANSLATION_KEYS.get(
                         value,
@@ -5139,27 +5359,104 @@ elif page == "Progress":
             )
 
             teacher_comment = st.text_area(
-                t("teacher_comment")
+                t("teacher_comment"),
+                value=draft_teacher_comment,
+                key=f"progress_teacher_comment_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
             )
 
-            progress_submitted = st.form_submit_button(
-                t("add_progress")
+            save_progress_draft_col, add_progress_col, delete_progress_draft_col = st.columns(
+                [1, 1, 1],
+                gap="small",
             )
 
-            if progress_submitted:
-                if selected_lesson is None:
+            with save_progress_draft_col:
+                progress_draft_submitted = st.form_submit_button(
+                    t("save_draft"),
+                    key=f"save_progress_draft_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
+                    width="stretch",
+                )
+
+            with add_progress_col:
+                progress_submitted = st.form_submit_button(
+                    t("add_progress"),
+                    key=f"add_progress_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
+                    width="stretch",
+                )
+
+            with delete_progress_draft_col:
+                delete_progress_draft_submitted = st.form_submit_button(
+                    t("delete_draft"),
+                    key=f"delete_progress_draft_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
+                    width="stretch",
+                )
+
+            if progress_draft_submitted:
+                if selected_lesson_id is None:
                     st.error(t("add_lesson_for_progress_first"))
                 else:
-                    new_progress = {
+                    progress_draft_data = {
                         "user_id": user_id,
-                        "student_id": int(student_options[selected_student]),
+                        "student_id": selected_student_id,
                         "course_id": int(selected_course_id),
-                        "lesson_id": int(lesson_options[selected_lesson]),
+                        "lesson_id": selected_lesson_id,
                         "status": status,
                         "teacher_comment": teacher_comment,
                     }
 
-                    supabase.table("progress").insert(new_progress).execute()
+                    supabase.table("progress_drafts").upsert(
+                        progress_draft_data,
+                        on_conflict="user_id,student_id,lesson_id",
+                    ).execute()
+
+                    st.success(t("draft_saved"))
+
+            elif delete_progress_draft_submitted:
+                if selected_lesson_id is not None:
+                    supabase.table("progress_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).eq(
+                        "student_id",
+                        selected_student_id,
+                    ).eq(
+                        "lesson_id",
+                        selected_lesson_id,
+                    ).execute()
+
+                st.session_state["progress_form_version"] += 1
+                st.success(t("draft_deleted"))
+                st.rerun()
+                
+            elif progress_submitted:
+                if selected_lesson_id is None:
+                    st.error(t("add_lesson_for_progress_first"))
+
+                else:
+                    new_progress = {
+                        "user_id": user_id,
+                        "student_id": selected_student_id,
+                        "course_id": int(selected_course_id),
+                        "lesson_id": selected_lesson_id,
+                        "status": status,
+                        "teacher_comment": teacher_comment,
+                    }
+
+                    supabase.table("progress").insert(
+                        new_progress
+                    ).execute()
+
+                    supabase.table("progress_drafts").delete().eq(
+                        "user_id",
+                        user_id,
+                    ).eq(
+                        "student_id",
+                        selected_student_id,
+                    ).eq(
+                        "lesson_id",
+                        selected_lesson_id,
+                    ).execute()
+
+                    st.session_state["progress_form_version"] += 1
 
                     st.success(t("progress_added_successfully"))
                     st.rerun()
