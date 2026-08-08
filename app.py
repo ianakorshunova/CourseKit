@@ -119,6 +119,11 @@ def student_label(row):
         "",
     )
 
+    custom_level_value = display_value(
+        row["custom_level"],
+        "",
+    )
+
     if language_value:
         language_label = t(
             LANGUAGE_TRANSLATION_KEYS.get(
@@ -129,10 +134,17 @@ def student_label(row):
     else:
         language_label = t("not_specified")
 
-    level_label = display_value(
+    level_value = display_value(
         row["level"],
-        t("not_specified"),
+        "",
     )
+
+    if level_value == "Custom" and custom_level_value:
+        level_label = custom_level_value
+    elif level_value:
+        level_label = level_value
+    else:
+        level_label = t("not_specified")
 
     return (
         f"{int(row['id'])} — {row['name']} "
@@ -140,6 +152,11 @@ def student_label(row):
     )
 
 def course_label(row):
+    subject_value = display_value(
+        row["subject"],
+        "",
+    )
+
     target_language_value = display_value(
         row["target_language"],
         "",
@@ -147,6 +164,16 @@ def course_label(row):
 
     instruction_language_value = display_value(
         row["instruction_language"],
+        "",
+    )
+
+    level_value = display_value(
+        row["level"],
+        "",
+    )
+
+    custom_level_value = display_value(
+        row["custom_level"],
         "",
     )
 
@@ -170,14 +197,22 @@ def course_label(row):
     else:
         instruction_language_label = t("not_specified")
 
-    level_label = display_value(
-        row["level"],
-        t("not_specified"),
+    if level_value == "Custom" and custom_level_value:
+        level_label = custom_level_value
+    elif level_value:
+        level_label = level_value
+    else:
+        level_label = t("not_specified")
+
+    subject_label = (
+        subject_value
+        if subject_value
+        else target_language_label
     )
 
     return (
         f"{int(row['id'])} — {row['title']} "
-        f"({target_language_label} {level_label} · "
+        f"({subject_label} · {level_label} · "
         f"{t('taught_in')} {instruction_language_label})"
     )
 
@@ -597,7 +632,16 @@ TRANSLATIONS = {
         "password_reset_successfully": "Password reset successfully. Sign in with your new password.",
         "password_reset_failed": "Could not reset password:",
 
-        "password_reset_return_hint": "Reload CourseKit to sign in with your new password."
+        "password_reset_return_hint": "Reload CourseKit to sign in with your new password.",
+
+        "subject": "Subject",
+        "custom_level": "Custom level",
+
+        "not_applicable": "Not applicable",
+
+        "please_enter_subject": "Please enter a subject.",
+
+        "please_enter_custom_level": "Please enter a custom level.",
 
     },
 
@@ -1016,7 +1060,16 @@ TRANSLATIONS = {
         "password_reset_successfully": "Пароль успешно изменён. Войдите с новым паролем.",
         "password_reset_failed": "Не удалось сбросить пароль:",
 
-        "password_reset_return_hint": "Перезагрузите CourseKit и войдите с новым паролем."
+        "password_reset_return_hint": "Перезагрузите CourseKit и войдите с новым паролем.",
+
+        "subject": "Предмет",
+        "custom_level": "Свой уровень",
+
+        "not_applicable": "Не применимо",
+
+        "please_enter_subject": "Введите предмет.",
+
+        "please_enter_custom_level": "Введите свой уровень.",
 
     },
 
@@ -1398,8 +1451,16 @@ TRANSLATIONS = {
         "password_reset_successfully": "密码已成功重置。请使用新密码登录。",
         "password_reset_failed": "无法重置密码：",
 
-        "password_reset_return_hint": "请重新加载 CourseKit，然后使用新密码登录。"
+        "password_reset_return_hint": "请重新加载 CourseKit，然后使用新密码登录。",
 
+        "subject": "科目",
+        "custom_level": "自定义级别",
+
+        "not_applicable": "不适用",
+
+        "please_enter_subject": "请输入科目。",
+
+        "please_enter_custom_level": "请输入自定义级别。",
     },
 }
 
@@ -1683,6 +1744,7 @@ LANGUAGE_TRANSLATION_KEYS = {
     "German": "language_german",
     "Spanish": "language_spanish",
     "Other": "language_other",
+    "Not applicable": "not_applicable",
 }
 
 STUDENT_STATUS_TRANSLATION_KEYS = {
@@ -1714,14 +1776,25 @@ PROGRESS_STATUS_TRANSLATION_KEYS = {
 }
 
 TABLE_COLUMNS = {
-    "students": ["id", "user_id", "name", "target_language", "level", "status", "notes"],
+    "students": [
+        "id",
+        "user_id",
+        "name",
+        "target_language",
+        "level",
+        "custom_level",
+        "status",
+        "notes",
+    ],
     "courses": [
         "id",
         "user_id",
         "title",
+        "subject",
         "target_language",
         "instruction_language",
         "level",
+        "custom_level",
         "description",
         "is_archived",
     ],
@@ -1761,9 +1834,11 @@ TABLE_COLUMNS = {
         "id",
         "user_id",
         "title",
+        "subject",
         "target_language",
         "instruction_language",
         "level",
+        "custom_level",
         "description",
         "updated_at",
     ],
@@ -1773,6 +1848,7 @@ TABLE_COLUMNS = {
         "name",
         "target_language",
         "level",
+        "custom_level",
         "status",
         "notes",
         "updated_at",
@@ -2277,6 +2353,7 @@ elif page == "Students":
         "German",
         "Spanish",
         "Other",
+        "Not applicable"
     ]
 
     student_level_options = [
@@ -2286,6 +2363,7 @@ elif page == "Students":
         "B2",
         "C1",
         "C2",
+        "Custom"
     ]
 
     student_status_options = [
@@ -2310,6 +2388,11 @@ elif page == "Students":
     draft_student_status = student_draft.get(
         "status",
         "active",
+    )
+
+    draft_student_custom_level = (
+        student_draft.get("custom_level")
+        or ""
     )
 
     student_language_index = (
@@ -2368,6 +2451,12 @@ elif page == "Students":
             key=f"student_level_{student_form_version}",
         )
 
+        custom_level = st.text_input(
+            t("custom_level"),
+            value=draft_student_custom_level,
+            key=f"student_custom_level_{student_form_version}",
+        )
+
         status = st.selectbox(
             t("status"),
             student_status_options,
@@ -2416,6 +2505,7 @@ elif page == "Students":
                 "name": name,
                 "target_language": language,
                 "level": level,
+                "custom_level": custom_level if level == "Custom" else "",
                 "status": status,
                 "notes": notes,
             }
@@ -2441,12 +2531,15 @@ elif page == "Students":
         elif submitted:
             if name.strip() == "":
                 st.error(t("please_enter_student_name"))
+            elif level == "Custom" and custom_level.strip() == "":
+                st.error(t("please_enter_custom_level"))
             else:
                 new_student = {
                     "user_id": user_id,
                     "name": name,
                     "target_language": language,
                     "level": level,
+                    "custom_level": custom_level if level == "Custom" else "",
                     "status": status,
                     "notes": notes,
                 }
@@ -2485,8 +2578,16 @@ elif page == "Students":
         student_row = students[
             students["id"].astype(int) == int(student_id_to_edit)
         ].iloc[0]
+
+        if "edit_student_form_version" not in st.session_state:
+            st.session_state["edit_student_form_version"] = 0
+
+        edit_student_form_version = st.session_state["edit_student_form_version"]
         
-        with st.form("edit_student_form"):
+        with st.form(
+            f"edit_student_form_{student_id_to_edit}_{edit_student_form_version}"
+        ):
+
             edited_name = st.text_input(
                 t("student_name"),
                 value=student_row["name"],
@@ -2494,7 +2595,15 @@ elif page == "Students":
 
             student_target_language = display_value(student_row["target_language"], "Other")
 
-            language_options = ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
+            language_options = [
+                "English",
+                "Chinese",
+                "Russian",
+                "German",
+                "Spanish",
+                "Other",
+                "Not applicable",
+            ]
 
             edited_target_language = st.selectbox(
                 t("target_language"),
@@ -2509,23 +2618,36 @@ elif page == "Students":
                 ),
             )
 
+            student_edit_level_options = [
+                "A1",
+                "A2",
+                "B1",
+                "B2",
+                "C1",
+                "C2",
+                "Custom",
+            ]
+
             edited_level = st.selectbox(
                 t("level"),
-                ["A1", "A2", "B1", "B2", "C1", "C2"],
+                student_edit_level_options,
                 index=(
-                    ["A1", "A2", "B1", "B2", "C1", "C2"].index(
-                        student_row["level"]
-                    )
-                    if student_row["level"] in [
-                        "A1",
-                        "A2",
-                        "B1",
-                        "B2",
-                        "C1",
-                        "C2",
-                    ]
+                    student_edit_level_options.index(student_row["level"])
+                    if student_row["level"] in student_edit_level_options
                     else 0
                 ),
+                key=f"edit_student_level_{student_id_to_edit}_{edit_student_form_version}",
+            )
+
+            current_custom_level = student_row["custom_level"]
+
+            if pd.isna(current_custom_level):
+                current_custom_level = ""
+
+            edited_custom_level = st.text_input(
+                t("custom_level"),
+                value=current_custom_level,
+                key=f"edit_student_custom_level_{student_id_to_edit}_{edit_student_form_version}",
             )
 
             student_status_options = [
@@ -2564,11 +2686,21 @@ elif page == "Students":
         if edit_student_submitted:
             if edited_name.strip() == "":
                 st.error(t("please_enter_student_name"))
+            elif (
+                edited_level == "Custom"
+                and edited_custom_level.strip() == ""
+            ):
+                st.error(t("please_enter_custom_level"))
             else:
                 updated_student = {
                     "name": edited_name,
                     "target_language": edited_target_language,
                     "level": edited_level,
+                    "custom_level": (
+                        edited_custom_level
+                        if edited_level == "Custom"
+                        else ""
+                    ),
                     "status": edited_status,
                     "notes": edited_notes,
                 }
@@ -2580,6 +2712,20 @@ elif page == "Students":
                     "user_id",
                     user_id
                 ).execute()
+
+                old_edit_student_form_version = st.session_state["edit_student_form_version"]
+
+                st.session_state.pop(
+                    f"edit_student_level_{student_id_to_edit}_{old_edit_student_form_version}",
+                    None,
+                )
+
+                st.session_state.pop(
+                    f"edit_student_custom_level_{student_id_to_edit}_{old_edit_student_form_version}",
+                    None,
+                )
+
+                st.session_state["edit_student_form_version"] += 1
 
                 st.success(t("student_updated_successfully"))
                 st.rerun()
@@ -2701,9 +2847,26 @@ elif page == "Student Profile":
             student_language_label,
         )
 
+        student_level = display_value(
+            student_row["level"],
+            "",
+        )
+
+        student_custom_level = display_value(
+            student_row["custom_level"],
+            "",
+        )
+
+        if student_level == "Custom" and student_custom_level:
+            student_level_label = student_custom_level
+        elif student_level:
+            student_level_label = student_level
+        else:
+            student_level_label = t("not_specified")
+
         col3.metric(
             t("level"),
-            display_value(student_row["level"], t("not_specified")),
+            student_level_label,
         )
 
         student_status = display_value(
@@ -3154,6 +3317,7 @@ elif page == "Courses":
         "German",
         "Spanish",
         "Other",
+        "Not applicable",
     ]
 
     course_level_options = [
@@ -3163,6 +3327,7 @@ elif page == "Courses":
         "B2",
         "C1",
         "C2",
+        "Custom",
     ]
 
     draft_target_language = course_draft.get(
@@ -3199,7 +3364,15 @@ elif page == "Courses":
     )
 
     draft_course_title = course_draft.get("title") or ""
+
     draft_description = course_draft.get("description") or ""
+
+    draft_subject = course_draft.get("subject") or ""
+
+    draft_custom_level = (
+        course_draft.get("custom_level")
+        or ""
+    )
     
     st.subheader(t("add_new_course"))
 
@@ -3217,6 +3390,12 @@ elif page == "Courses":
             t("course_title"),
             value=draft_course_title,
             key=f"course_title_{course_form_version}",
+        )
+
+        subject = st.text_input(
+            t("subject"),
+            value=draft_subject,
+            key=f"course_subject_{course_form_version}",
         )
 
         course_language = st.selectbox(
@@ -3244,6 +3423,12 @@ elif page == "Courses":
             course_level_options,
             index=course_level_index,
             key=f"course_level_{course_form_version}",
+        )
+
+        custom_level = st.text_input(
+            t("custom_level"),
+            value=draft_custom_level,
+            key=f"course_custom_level_{course_form_version}",
         )
 
         description = st.text_area(
@@ -3282,9 +3467,15 @@ elif page == "Courses":
             course_draft_data = {
                 "user_id": user_id,
                 "title": title,
+                "subject": subject,
                 "target_language": course_language,
                 "instruction_language": instruction_language,
                 "level": course_level,
+                "custom_level": (
+                    custom_level
+                    if course_level == "Custom"
+                    else ""
+                ),
                 "description": description,
             }
 
@@ -3309,13 +3500,23 @@ elif page == "Courses":
         elif course_submitted:
             if title.strip() == "":
                 st.error(t("please_enter_course_title"))
+            elif subject.strip() == "":
+                st.error(t("please_enter_subject"))
+            elif course_level == "Custom" and custom_level.strip() == "":
+                st.error(t("please_enter_custom_level"))
             else:
                 new_course = {
                     "user_id": user_id,
                     "title": title,
+                    "subject": subject,
                     "target_language": course_language,
                     "instruction_language": instruction_language,
                     "level": course_level,
+                    "custom_level": (
+                        custom_level
+                        if course_level == "Custom"
+                        else ""
+                    ),
                     "description": description,
                     "is_archived": False,
                 }
@@ -3340,25 +3541,7 @@ elif page == "Courses":
         edit_course_options = {}
 
         for _, row in active_courses.iterrows():
-            target_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["target_language"],
-                    row["target_language"],
-                )
-            )
-
-            instruction_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["instruction_language"],
-                    row["instruction_language"],
-                )
-            )
-
-            label = (
-                f"{row['id']} – {row['title']} "
-                f"({target_language_label} {row['level']} "
-                f"· {t('taught_in')} {instruction_language_label})"
-            )
+            label = course_label(row)
 
             edit_course_options[label] = int(row["id"])
 
@@ -3374,13 +3557,39 @@ elif page == "Courses":
             active_courses["id"].astype(int) == int(course_id_to_edit)
         ].iloc[0]
 
-        language_options = ["English", "Chinese", "Russian", "German", "Spanish", "Other"]
-        level_options = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        language_options = [
+            "English",
+            "Chinese",
+            "Russian",
+            "German",
+            "Spanish",
+            "Other",
+            "Not applicable",
+        ]
+        level_options = ["A1", "A2", "B1", "B2", "C1", "C2", "Custom"]
 
-        with st.form("edit_course_form"):
+        if "edit_course_form_version" not in st.session_state:
+            st.session_state["edit_course_form_version"] = 0
+
+        edit_course_form_version = st.session_state["edit_course_form_version"]
+
+        with st.form(
+            f"edit_course_form_{course_id_to_edit}_{edit_course_form_version}"
+        ):
+
             edited_title = st.text_input(
                 t("course_title"),
                 value=course_row["title"],
+            )
+
+            current_subject = course_row["subject"]
+
+            if pd.isna(current_subject):
+                current_subject = ""
+
+            edited_subject = st.text_input(
+                t("subject"),
+                value=current_subject,
             )
 
             edited_target_language = st.selectbox(
@@ -3412,10 +3621,23 @@ elif page == "Courses":
             edited_level = st.selectbox(
                 t("course_level"),
                 level_options,
-                index=level_options.index(course_row["level"])
-                if course_row["level"] in level_options
-                else 0,
-                key="edit_course_level",
+                index=(
+                    level_options.index(course_row["level"])
+                    if course_row["level"] in level_options
+                    else 0
+                ),
+                key=f"edit_course_level_{course_id_to_edit}_{edit_course_form_version}",
+            )
+
+            current_custom_level = course_row["custom_level"]
+
+            if pd.isna(current_custom_level):
+                current_custom_level = ""
+
+            edited_custom_level = st.text_input(
+                t("custom_level"),
+                value=current_custom_level,
+                key=f"edit_course_custom_level_{course_id_to_edit}_{edit_course_form_version}",
             )
 
             current_description = course_row["description"]
@@ -3435,12 +3657,22 @@ elif page == "Courses":
             if edit_course_submitted:
                 if edited_title.strip() == "":
                     st.error(t("please_enter_course_title"))
+                elif edited_subject.strip() == "":
+                    st.error(t("please_enter_subject"))
+                elif edited_level == "Custom" and edited_custom_level.strip() == "":
+                    st.error(t("please_enter_custom_level"))
                 else:
                     updated_course = {
                         "title": edited_title,
+                        "subject": edited_subject,
                         "target_language": edited_target_language,
                         "instruction_language": edited_instruction_language,
                         "level": edited_level,
+                        "custom_level": (
+                            edited_custom_level
+                            if edited_level == "Custom"
+                            else ""
+                        ),
                         "description": edited_description,
                     }
 
@@ -3451,6 +3683,20 @@ elif page == "Courses":
                         "user_id",
                         user_id
                     ).execute()
+
+                    old_edit_course_form_version = st.session_state["edit_course_form_version"]
+
+                    st.session_state.pop(
+                        f"edit_course_level_{course_id_to_edit}_{old_edit_course_form_version}",
+                        None,
+                    )
+
+                    st.session_state.pop(
+                        f"edit_course_custom_level_{course_id_to_edit}_{old_edit_course_form_version}",
+                        None,
+                    )
+
+                    st.session_state["edit_course_form_version"] += 1
 
                     st.success(t("course_updated_successfully"))
                     st.rerun()
@@ -3604,18 +3850,7 @@ elif page == "Courses":
         )
 
         for _, row in archived_courses_for_restore.iterrows():
-            target_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["target_language"],
-                    row["target_language"],
-                )
-            )
-
-            label = (
-                f"{row['id']} — {row['title']} "
-                f"({target_language_label} {row['level']})"
-            )
-
+            label = course_label(row)
             restore_course_options[label] = int(row["id"])
 
         with st.form("restore_course_form"):
@@ -3670,18 +3905,7 @@ elif page == "Courses":
         )
 
         for _, row in archived_courses_for_delete.iterrows():
-            target_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["target_language"],
-                    row["target_language"],
-                )
-            )
-
-            label = (
-                f"{row['id']} — {row['title']} "
-                f"({target_language_label} {row['level']})"
-            )
-
+            label = course_label(row)
             delete_archived_course_options[label] = int(row["id"])
 
         with st.form("delete_archived_course_form"):
@@ -3871,26 +4095,7 @@ elif page == "Lessons":
         course_options = {}
 
         for _, row in courses.iterrows():
-            target_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["target_language"],
-                    row["target_language"],
-                )
-            )
-
-            instruction_language_label = t(
-                LANGUAGE_TRANSLATION_KEYS.get(
-                    row["instruction_language"],
-                    row["instruction_language"],
-                )
-            )
-
-            label = (
-                f"{row['id']} – {row['title']} "
-                f"({target_language_label} {row['level']} "
-                f"· {t('taught_in')} {instruction_language_label})"
-            )
-
+            label = course_label(row)
             course_options[label] = int(row["id"])
 
         draft_response = (
@@ -5426,7 +5631,7 @@ elif page == "Progress":
                 st.session_state["progress_form_version"] += 1
                 st.success(t("draft_deleted"))
                 st.rerun()
-                
+
             elif progress_submitted:
                 if selected_lesson_id is None:
                     st.error(t("add_lesson_for_progress_first"))
