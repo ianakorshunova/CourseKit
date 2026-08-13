@@ -643,6 +643,8 @@ TRANSLATIONS = {
 
         "please_enter_custom_level": "Please enter a custom level.",
 
+        "custom": "Custom",
+
     },
 
     "Русский": {
@@ -1071,6 +1073,8 @@ TRANSLATIONS = {
 
         "please_enter_custom_level": "Введите свой уровень.",
 
+        "custom": "Свой",
+
     },
 
     "中文": {
@@ -1461,6 +1465,8 @@ TRANSLATIONS = {
         "please_enter_subject": "请输入科目。",
 
         "please_enter_custom_level": "请输入自定义级别。",
+
+        "custom": "自定义",
     },
 }
 
@@ -2449,6 +2455,7 @@ elif page == "Students":
             student_level_options,
             index=student_level_index,
             key=f"student_level_{student_form_version}",
+            format_func=lambda x: t("custom") if x == "Custom" else x,
         )
 
         custom_level = st.text_input(
@@ -2637,6 +2644,7 @@ elif page == "Students":
                     else 0
                 ),
                 key=f"edit_student_level_{student_id_to_edit}_{edit_student_form_version}",
+                format_func=lambda x: t("custom") if x == "Custom" else x,
             )
 
             current_custom_level = student_row["custom_level"]
@@ -3423,6 +3431,7 @@ elif page == "Courses":
             course_level_options,
             index=course_level_index,
             key=f"course_level_{course_form_version}",
+            format_func=lambda x: t("custom") if x == "Custom" else x,
         )
 
         custom_level = st.text_input(
@@ -3627,6 +3636,7 @@ elif page == "Courses":
                     else 0
                 ),
                 key=f"edit_course_level_{course_id_to_edit}_{edit_course_form_version}",
+                format_func=lambda x: t("custom") if x == "Custom" else x,
             )
 
             current_custom_level = course_row["custom_level"]
