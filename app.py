@@ -1726,8 +1726,8 @@ st.markdown(
             <p class="eyebrow">Mini LMS · EdTech · Course Management</p>
             <h1>CourseKit 📚</h1>
             <p class="hero-text">
-                A lightweight LMS for language teachers to manage courses, lessons,
-                assignments, student skills, and learning progress.
+                A lightweight LMS for teachers to plan courses, manage lessons and assignments, and track
+                student progress.
             </p>
         </div>
         <div class="hero-features">
@@ -4379,10 +4379,18 @@ elif page == "Lessons":
         lesson_id_to_edit = lesson_options[selected_lesson_to_edit]
         lesson_row = lessons[lessons["id"].astype(int) == int(lesson_id_to_edit)].iloc[0]
 
-        with st.form("edit_lesson_form"):
+        if "edit_lesson_form_version" not in st.session_state:
+            st.session_state["edit_lesson_form_version"] = 0
+
+        edit_lesson_form_version = st.session_state["edit_lesson_form_version"]
+
+        with st.form(
+            f"edit_lesson_form_{lesson_id_to_edit}_{edit_lesson_form_version}"
+        ):
             edited_title = st.text_input(
                 t("lesson_title"),
                 value=lesson_row["title"],
+                key=f"edit_lesson_title_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             current_lesson_date = lesson_row["lesson_date"]
@@ -4394,6 +4402,7 @@ elif page == "Lessons":
             edited_lesson_date = st.date_input(
                 t("lesson_date"),
                 value=current_lesson_date,
+                key=f"edit_lesson_date_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             current_start_time = lesson_row["start_time"]
@@ -4405,6 +4414,7 @@ elif page == "Lessons":
             edited_start_time = st.time_input(
                 t("start_time"),
                 value=current_start_time,
+                key=f"edit_lesson_start_time_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             edited_duration_minutes = st.number_input(
@@ -4413,11 +4423,13 @@ elif page == "Lessons":
                 max_value=240,
                 value=int(lesson_row["duration_minutes"]),
                 step=15,
+                key=f"edit_lesson_duration_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             edited_lesson_goal = st.text_area(
                 t("lesson_goal"),
                 value=lesson_row["lesson_goal"],
+                key=f"edit_lesson_goal_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             skill_options = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
@@ -4438,11 +4450,13 @@ elif page == "Lessons":
                 skill_options,
                 default=current_skills_focus,
                 format_func=lambda value: t(value),
+                key=f"edit_lesson_skills_{lesson_id_to_edit}_{edit_lesson_form_version}",
             )
 
             edited_materials = st.text_area(
                 t("materials"),
                 value=lesson_row["materials"],
+                key=f"edit_lesson_materials_{lesson_id_to_edit}_{edit_lesson_form_version}"
             )
 
             current_materials_url = lesson_row["materials_url"]
@@ -4452,11 +4466,13 @@ elif page == "Lessons":
             edited_materials_url = st.text_input(
                 t("materials_url"),
                 value=current_materials_url,
+                key=f"edit_lesson_materials_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
             )
 
             edited_homework_template = st.text_area(
                 t("homework_template"),
                 value=lesson_row["homework_template"],
+                key=f"edit_lesson_homework_template_{lesson_id_to_edit}_{edit_lesson_form_version}"
             )
 
             current_homework_url = lesson_row["homework_url"]
@@ -4466,6 +4482,7 @@ elif page == "Lessons":
             edited_homework_url = st.text_input(
                 t("homework_url"),
                 value=current_homework_url,
+                key=f"edit_lesson_homework_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
             )
 
             edit_lesson_submitted = st.form_submit_button(
@@ -4496,6 +4513,8 @@ elif page == "Lessons":
                         "user_id",
                         user_id
                     ).execute()
+
+                    st.session_state["edit_lesson_form_version"] += 1
 
                     st.success(t("lesson_updated_successfully"))
                     st.rerun()
