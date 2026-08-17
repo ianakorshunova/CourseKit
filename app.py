@@ -645,6 +645,15 @@ TRANSLATIONS = {
 
         "custom": "Custom",
 
+        "course_progress_summary": "Course progress summary",
+        "lessons_completed": "lessons completed",
+        "lesson": "Lesson",
+        "status": "Status",
+        "course": "Course",
+        "no_comments_yet": "No comments yet.",
+        "unknown_course": "Unknown course",
+        "unknown_lesson": "Unknown lesson",
+
     },
 
     "Русский": {
@@ -1075,6 +1084,17 @@ TRANSLATIONS = {
 
         "custom": "Свой",
 
+        "course_progress_summary": "Сводка прогресса по курсу",
+
+        "course_progress_summary": "Сводка прогресса по курсу",
+        "lessons_completed": "уроков завершено",
+        "lesson": "Урок",
+        "status": "Статус",
+        "course": "Курс",
+        "no_comments_yet": "Комментариев пока нет.",
+        "unknown_course": "Неизвестный курс",
+        "unknown_lesson": "Неизвестный урок",
+
     },
 
     "中文": {
@@ -1467,6 +1487,17 @@ TRANSLATIONS = {
         "please_enter_custom_level": "请输入自定义级别。",
 
         "custom": "自定义",
+
+        "course_progress_summary": "课程进度概览",
+
+        "course_progress_summary": "课程进度概览",
+        "lessons_completed": "节课已完成",
+        "lesson": "课时",
+        "status": "状态",
+        "course": "课程",
+        "no_comments_yet": "暂无评语。",
+        "unknown_course": "未知课程",
+        "unknown_lesson": "未知课时",
     },
 }
 
@@ -3112,7 +3143,7 @@ elif page == "Student Profile":
             course_titles = dict(zip(courses["id"], courses["title"]))
             lesson_titles = dict(zip(lessons["id"], lessons["title"]))
 
-            st.subheader("Course progress summary")
+            st.subheader(t("course_progress_summary"))
 
             student_course_ids = student_progress["course_id"].dropna().astype(int).unique()
 
@@ -3137,11 +3168,17 @@ elif page == "Student Profile":
                 else:
                     progress_ratio = completed_lessons_count / total_lessons_count
 
-                course_name = course_titles.get(course_id, "Unknown course")
+                course_name = course_titles.get(
+                    course_id,
+                    t("unknown_course"),
+                )
 
                 st.write(f"**{course_name}**")
-                st.write(f"{completed_lessons_count} / {total_lessons_count} lessons completed")
-                st.progress(progress_ratio)
+                st.write(
+                    f"{completed_lessons_count} / "
+                    f"{total_lessons_count} {t('lessons_completed')}"
+                )
+
             
             student_progress_view_source = student_progress.copy()
 
@@ -3195,6 +3232,12 @@ elif page == "Student Profile":
 
                 student_progress_view = pd.DataFrame(student_progress_rows)
 
+                student_progress_view["status"] = (
+                    student_progress_view["status"]
+                    .str.replace(" ", "_")
+                    .map(lambda value: t(value))
+                )
+
                 if not student_progress_view.empty:
                     student_progress_view = student_progress_view.sort_values(
                         by=["lesson_date", "start_time"],
@@ -3207,24 +3250,41 @@ elif page == "Student Profile":
                     width="stretch",
                     hide_index=True,
                     column_config={
-                        "lesson": st.column_config.TextColumn("Lesson", width="large"),
-                        "status": st.column_config.TextColumn("Status", width="medium"),
+                        "lesson": st.column_config.TextColumn(
+                            t("lesson"),
+                            width="large",
+                        ),
+                        "status": st.column_config.TextColumn(
+                            t("status"),
+                            width="medium",
+                        ),
                     }
                 )
-
-            with st.expander("Progress details"):
+                
+            with st.expander(t("progress_details")):
                 for _, row in student_progress_view_source.iterrows():
-                    course_name = course_titles.get(row["course_id"], "Unknown course")
-                    lesson_name = lesson_titles.get(row["lesson_id"], "Unknown lesson")
+                    course_name = course_titles.get(
+                        row["course_id"],
+                        t("unknown_course"),
+                    )
+
+                    lesson_name = lesson_titles.get(
+                        row["lesson_id"],
+                        t("unknown_lesson"),
+                    )
 
                     teacher_comment = row["teacher_comment"]
+
                     if pd.isna(teacher_comment) or str(teacher_comment).strip() == "":
-                        teacher_comment = "No comments yet."
+                        teacher_comment = t("no_comments_yet")
+
+                    status_key = str(row["status"]).replace(" ", "_")
+                    status_label = t(status_key)
 
                     st.write(f"### {lesson_name}")
-                    st.write(f"**Course:** {course_name}")
-                    st.write(f"**Status:** {row['status']}")
-                    st.write(f"**Teacher comment:** {teacher_comment}")
+                    st.write(f"**{t('course')}:** {course_name}")
+                    st.write(f"**{t('status')}:** {status_label}")
+                    st.write(f"**{t('teacher_comment')}:** {teacher_comment}")
 
 elif page == "Courses":
     st.header(t("courses"))
