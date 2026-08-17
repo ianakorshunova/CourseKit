@@ -55,7 +55,23 @@ if (
     except Exception as error:
         st.error(f"Could not start password recovery: {error}")
 
+# def sign_up_user(email, password):
+#     return supabase.auth.sign_up(
+#         {
+#             "email": email,
+#             "password": password,
+#         }
+#     )
+
 def sign_up_user(email, password):
+    beta_check = supabase.rpc(
+        "is_beta_tester",
+        {"candidate_email": email},
+    ).execute()
+
+    if not beta_check.data:
+        raise ValueError("beta_invite_only")
+
     return supabase.auth.sign_up(
         {
             "email": email,
@@ -654,6 +670,8 @@ TRANSLATIONS = {
         "unknown_course": "Unknown course",
         "unknown_lesson": "Unknown lesson",
 
+        "beta_invite_only": "Registration is currently available to invited testers only.",
+
     },
 
     "Русский": {
@@ -1095,6 +1113,8 @@ TRANSLATIONS = {
         "unknown_course": "Неизвестный курс",
         "unknown_lesson": "Неизвестный урок",
 
+        "beta_invite_only": "Регистрация сейчас доступна только приглашённым тестировщикам.",
+
     },
 
     "中文": {
@@ -1498,6 +1518,8 @@ TRANSLATIONS = {
         "no_comments_yet": "暂无评语。",
         "unknown_course": "未知课程",
         "unknown_lesson": "未知课时",
+
+        "beta_invite_only": "目前仅限受邀测试用户注册。",
     },
 }
 
@@ -1727,6 +1749,12 @@ def show_auth_screen():
                         st.success(
                             t("check_email_to_confirm")
                         )
+
+                except ValueError as error:
+                    if str(error) == "beta_invite_only":
+                        st.error(t("beta_invite_only"))
+                    else:
+                        st.error(str(error))
 
                 except Exception as error:
                     st.error(
@@ -3260,7 +3288,7 @@ elif page == "Student Profile":
                         ),
                     }
                 )
-                
+
             with st.expander(t("progress_details")):
                 for _, row in student_progress_view_source.iterrows():
                     course_name = course_titles.get(
