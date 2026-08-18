@@ -1,26 +1,32 @@
 # CourseKit 📚
 
-CourseKit is a lightweight mini LMS for language teachers and course creators.
+CourseKit is a lightweight mini LMS for language teachers and independent tutors.
 
-It helps manage students, courses, lessons, assignments, student skills, and learning progress in one simple Streamlit app.
+It helps manage students, courses, lessons, assignments, learning goals, recurring mistakes, student skills, and progress in one Streamlit app.
 
-The app includes user authentication, so each teacher can sign in and manage their own workspace.
+The app includes user authentication and user-specific data access, so each teacher can sign in and manage their own workspace.
 
 ## ✨ Features
 
 - User authentication with Supabase Auth
+- Invite-only beta registration
 - User-specific data access with Row Level Security policies
-- Student management: add, edit, delete students
-- Course management: create and edit language courses
-- Lesson planning: lesson goals, skills focus, materials, homework templates
-- Lesson scheduling: lesson date, start time, and duration
-- Resource links: add external materials and homework links
-- Assignment tracking: create, update, and delete assignments
-- Progress tracking: monitor lesson progress by student and course
-- Student profile page: see student info, assignments, skills, and progress in one place
-- Student skills tracking: listening, reading, speaking, writing, grammar, and vocabulary
+- Student management: add, edit, archive, restore, and delete students
+- Student profiles with key learning information in one place
+- Course management with subjects, target languages, levels, and custom levels
+- Lesson planning: lesson goals, skills focus, materials, homework templates, dates, and resource links
 - Lesson archive and restore workflow
-- Dashboard with key metrics and status overviews
+- Assignment tracking: create, update, and delete assignments
+- Student learning goals with milestones and target dates
+- Goal progress tracking with milestone completion
+- Active, paused, and completed goal statuses
+- Recurring mistake tracking for individual students
+- Active and resolved recurring mistake statuses
+- Student skills tracking: listening, reading, speaking, writing, grammar, and vocabulary
+- Progress tracking by student, course, and lesson
+- Dashboard with key metrics, active goals, and status overviews
+- Draft workflows for key forms
+- English, Russian, and Chinese interface languages
 - Mobile-friendly layout improvements
 
 ## 🛠️ Tech Stack
@@ -42,14 +48,9 @@ CourseKit/
 ├── requirements.txt
 ├── .gitignore
 ├── README.md
+├── .streamlit/
+│   └── config.toml
 └── screenshots/
-    ├── dashboard.png
-    ├── courses.png
-    ├── students.png
-    ├── lessons.png
-    ├── assignments.png
-    ├── progress.png
-    └── student-skills.png
 ```
 
 Data is stored in Supabase tables, not in local CSV files.
@@ -93,7 +94,7 @@ streamlit run app.py
 
 CourseKit uses Supabase as its database backend.
 
-The app stores courses, students, lessons, assignments, progress records, and student skill profiles in Supabase tables.
+The app stores students, courses, lessons, assignments, progress records, student skill profiles, learning goals, milestones, recurring mistakes, and draft data in Supabase tables.
 
 Main tables:
 
@@ -103,6 +104,9 @@ Main tables:
 - `assignments` — homework tasks, assignment status, evaluation, teacher comments, and owner user ID
 - `progress` — student progress by course and lesson, linked to the owner user ID
 - `student_skills` — skill profiles for each student: listening, reading, speaking, writing, grammar, vocabulary, comments, and owner user ID
+- `goals` — student learning goals, optional course links, target dates, and active / paused / completed status
+- `milestones` — smaller steps linked to goals, with completion state and ordering
+- `recurring_mistakes` — recurring student mistakes, optional notes, and active / resolved status
 
 Each record is linked to a Supabase Auth user. Row Level Security policies restrict access so users can manage only their own data.
 
@@ -160,8 +164,10 @@ A language teacher can use CourseKit to:
 - Calendar view for scheduled lessons
 - Attendance tracking
 - Exportable student reports
+- Goal and progress history visualization
 - Teacher onboarding flow and sample demo workspace
-
+- Optional workspace / team features for small language schools
+  
 ## 👩‍💻 Author
 
 Created by Iana Korshunova as an EdTech / Python / Streamlit / Supabase portfolio project.
