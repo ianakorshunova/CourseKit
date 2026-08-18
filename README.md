@@ -123,39 +123,22 @@ A language teacher can use CourseKit to:
 7. Monitor student skills across listening, reading, speaking, writing, grammar, and vocabulary.
 8. View all important information on the student profile page.
 
-## 🖼 Screenshots
+## 🖼️ Screenshots
 
 ### Sign in
-
 ![Sign in](screenshots/sign-in.png)
 
 ### Dashboard
-
 ![Dashboard](screenshots/dashboard.png)
 
-### Courses
-
-![Courses](screenshots/courses.png)
-
-### Lessons
-
-![Lessons](screenshots/lessons.png)
-
-### Assignments
-
-![Assignments](screenshots/assignments.png)
-
-### Progress
-
-![Progress](screenshots/progress.png)
-
-### Student Skills
-
-![Student Skills](screenshots/student-skills.png)
-
-### Student Profile
-
+### Student workspace
 ![Student Profile](screenshots/student-profile.png)
+
+### Goals and milestones
+![Goals](screenshots/goals.png)
+
+### Recurring mistakes
+![Recurring mistakes](screenshots/recurring-mistakes.png)
 
 ## 🌱 Future Improvements
 
