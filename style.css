@@ -363,3 +363,24 @@ div[data-testid="stMetricValue"] {
     overflow-wrap: anywhere !important;
     line-height: 1.1 !important;
 }
+
+.stTabs [data-baseweb="tab-list"] {
+    justify-content: safe center;
+    gap: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+    display: none;
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+}
+
+.stTabs [data-baseweb="tab"] p {
+    font-size: 1.05rem;
+    font-weight: 600;
+}

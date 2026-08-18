@@ -55,14 +55,6 @@ if (
     except Exception as error:
         st.error(f"Could not start password recovery: {error}")
 
-# def sign_up_user(email, password):
-#     return supabase.auth.sign_up(
-#         {
-#             "email": email,
-#             "password": password,
-#         }
-#     )
-
 def sign_up_user(email, password):
     beta_check = supabase.rpc(
         "is_beta_tester",
@@ -720,6 +712,37 @@ TRANSLATIONS = {
         "save_milestone_changes": "Save changes",
         "milestone_updated_successfully": "Milestone updated successfully.",
 
+        "dashboard_active_goals": "Active goals",
+
+        "recurring_mistakes": "Recurring mistakes",
+
+        "active_mistakes": "Active recurring mistakes",
+        "add_recurring_mistake": "Add recurring mistake",
+        "mistake_text": "Mistake",
+        "mistake_example": "Example: Forgets articles before professions.",
+        "mistake_note": "Note",
+        "mistake_note_example": "Optional: Add context or an example from the lesson.",
+        "save_mistake": "Save mistake",
+        "mistake_required": "Please enter a recurring mistake.",
+        "mistake_added_successfully": "Recurring mistake added successfully.",
+        "maximum_active_mistakes": "A student can have up to 5 active recurring mistakes.",
+        "no_recurring_mistakes_yet": "No recurring mistakes yet.",
+        "mistake_active": "Active",
+        "mistake_resolved": "Resolved",
+
+        "mistake_status": "Status",
+
+        "resolved_mistakes": "Resolved mistakes",
+        "no_resolved_mistakes": "No resolved mistakes.",
+
+        "edit_mistake": "Edit mistake",
+        "save_mistake_changes": "Save changes",
+        "mistake_updated_successfully": "Mistake updated successfully.",
+
+        "delete_mistake": "Delete mistake",
+        "confirm_delete_mistake": "I confirm that I want to delete this mistake.",
+        "mistake_deleted_successfully": "Mistake deleted successfully.",
+
     },
 
     "Русский": {
@@ -1210,6 +1233,37 @@ TRANSLATIONS = {
         "edit_milestone": "Редактировать этап",
         "save_milestone_changes": "Сохранить изменения",
         "milestone_updated_successfully": "Этап успешно обновлён.",
+
+        "dashboard_active_goals": "Активные цели",
+
+        "recurring_mistakes": "Повторяющиеся ошибки",
+
+        "active_mistakes": "Активные повторяющиеся ошибки",
+        "add_recurring_mistake": "Добавить повторяющуюся ошибку",
+        "mistake_text": "Ошибка",
+        "mistake_example": "Пример: Забывает артикли перед названиями профессий.",
+        "mistake_note": "Заметка",
+        "mistake_note_example": "Необязательно: добавьте контекст или пример с урока.",
+        "save_mistake": "Сохранить ошибку",
+        "mistake_required": "Введите повторяющуюся ошибку.",
+        "mistake_added_successfully": "Повторяющаяся ошибка успешно добавлена.",
+        "maximum_active_mistakes": "У ученика может быть до 5 активных повторяющихся ошибок.",
+        "no_recurring_mistakes_yet": "Повторяющихся ошибок пока нет.",
+        "mistake_active": "Активная",
+        "mistake_resolved": "Исправлена",
+
+        "mistake_status": "Статус",
+
+        "resolved_mistakes": "Исправленные ошибки",
+        "no_resolved_mistakes": "Исправленных ошибок пока нет.",
+
+        "edit_mistake": "Редактировать ошибку",
+        "save_mistake_changes": "Сохранить изменения",
+        "mistake_updated_successfully": "Ошибка успешно обновлена.",
+
+        "delete_mistake": "Удалить ошибку",
+        "confirm_delete_mistake": "Я подтверждаю удаление этой ошибки.",
+        "mistake_deleted_successfully": "Ошибка успешно удалена.",
     },
 
     "中文": {
@@ -1663,6 +1717,37 @@ TRANSLATIONS = {
         "edit_milestone": "编辑阶段目标",
         "save_milestone_changes": "保存更改",
         "milestone_updated_successfully": "阶段目标已成功更新。",
+
+        "dashboard_active_goals": "进行中的目标",
+
+        "recurring_mistakes": "常见错误",
+
+        "active_mistakes": "常见错误",
+        "add_recurring_mistake": "添加常见错误",
+        "mistake_text": "错误",
+        "mistake_example": "示例：在职业名称前经常忘记使用冠词。",
+        "mistake_note": "备注",
+        "mistake_note_example": "可选：添加课堂中的例子或相关说明。",
+        "save_mistake": "保存错误",
+        "mistake_required": "请输入常见错误。",
+        "mistake_added_successfully": "常见错误已成功添加。",
+        "maximum_active_mistakes": "每位学生最多可以有 5 个未解决的常见错误。",
+        "no_recurring_mistakes_yet": "暂无常见错误。",
+        "mistake_active": "未解决",
+        "mistake_resolved": "已解决",
+
+        "mistake_status": "状态",
+
+        "resolved_mistakes": "已解决的错误",
+        "no_resolved_mistakes": "暂无已解决的错误。",
+
+        "edit_mistake": "编辑错误",
+        "save_mistake_changes": "保存更改",
+        "mistake_updated_successfully": "错误已成功更新。",
+
+        "delete_mistake": "删除错误",
+        "confirm_delete_mistake": "我确认要删除此错误。",
+        "mistake_deleted_successfully": "错误已成功删除。",
     },
 }
 
@@ -2149,6 +2234,15 @@ TABLE_COLUMNS = {
         "position",
         "created_at",
     ],
+    "recurring_mistakes": [
+        "id",
+        "user_id",
+        "student_id",
+        "text",
+        "note",
+        "status",
+        "created_at",
+    ],
 }
 
 def load_table(table_name):
@@ -2173,6 +2267,7 @@ progress = load_table("progress")
 student_skills = load_table("student_skills")
 goals = load_table("goals")
 milestones = load_table("milestones")
+recurring_mistakes = load_table("recurring_mistakes")
 
 if "is_archived" not in lessons.columns:
     lessons["is_archived"] = False
@@ -2369,6 +2464,54 @@ if page == "Dashboard":
     col3.metric(t("lessons"), len(active_lessons))
     col4.metric(t("assignments"), len(assignments))
     col5.metric(t("progress"), len(progress))
+
+    st.subheader(t("dashboard_active_goals"))
+
+    active_goals_dashboard = goals[
+        goals["status"] == "active"
+    ].copy()
+
+    if active_goals_dashboard.empty:
+        st.info(t("no_goals_yet"))
+    else:
+        dashboard_student_names = dict(
+            zip(
+                students["id"],
+                students["name"],
+            )
+        )
+
+        for _, goal_row in active_goals_dashboard.iterrows():
+            goal_id = int(goal_row["id"])
+
+            goal_milestones = milestones[
+                milestones["goal_id"] == goal_id
+            ]
+
+            completed_count = len(
+                goal_milestones[
+                    goal_milestones["is_completed"] == True
+                ]
+            )
+
+            total_count = len(goal_milestones)
+
+            student_name = dashboard_student_names.get(
+                goal_row["student_id"],
+                "",
+            )
+
+            if total_count > 0:
+                st.write(
+                    f"**{student_name}** — "
+                    f"{goal_row['title']} — "
+                    f"{completed_count} / {total_count}"
+                )
+            else:
+                st.write(
+                    f"**{student_name}** — "
+                    f"{goal_row['title']}"
+                )
 
     st.subheader(t("assignment_status_overview"))
 
@@ -3040,10 +3183,11 @@ elif page == "Students":
 
         st.divider()
 
-        profile_tab, goals_tab, progress_tab, skills_tab = st.tabs(
+        profile_tab, goals_tab, mistakes_tab, progress_tab, skills_tab = st.tabs(
             [
                 t("student_profile"),
                 t("goals"),
+                t("recurring_mistakes"),
                 t("progress"),
                 t("student_skills"),
             ]
@@ -3538,13 +3682,6 @@ elif page == "Students":
                     st.info(t("no_goals_yet"))
                 else:
                     for _, goal_row in active_student_goals.iterrows():
-                        # with st.expander(goal_row["title"]):
-
-                        #     if pd.notna(goal_row["target_date"]):
-                        #         st.write(
-                        #             f"**{t('target_date')}:** "
-                        #             f"{goal_row['target_date']}"
-                        #         )
 
                         goal_id = int(goal_row["id"])
 
@@ -3567,12 +3704,6 @@ elif page == "Students":
                                 f"{goal_row['title']} — "
                                 f"{completed_milestones} / {total_milestones}"
                             )
-
-                        # if total_milestones > 0:
-                        #     st.write(
-                        #         f"**{t('progress')}:** "
-                        #         f"{completed_milestones} / {total_milestones}"
-                        #     )
 
                         with st.expander(goal_expander_title):
                             if pd.notna(goal_row["target_date"]):
@@ -3971,6 +4102,300 @@ elif page == "Students":
 
                         st.success(t("goal_added_successfully"))
                         st.rerun()
+
+    with mistakes_tab:
+        st.header(t("recurring_mistakes"))
+
+        if students.empty:
+            st.info(t("no_students_yet"))
+        else:
+            mistake_student_options = {
+                student_label(row): int(row["id"])
+                for _, row in students.iterrows()
+            }
+
+            selected_mistake_student = st.selectbox(
+                t("select_student"),
+                list(mistake_student_options.keys()),
+                key="mistake_student_select",
+            )
+
+            selected_mistake_student_id = mistake_student_options[
+                selected_mistake_student
+            ]
+
+            student_mistakes = recurring_mistakes[
+                recurring_mistakes["student_id"] == selected_mistake_student_id
+            ].copy()
+
+            active_student_mistakes = student_mistakes[
+                student_mistakes["status"] == "active"
+            ]
+
+            # st.subheader(t("active_mistakes"))
+            st.markdown(
+                f"<h3 style='font-size:1.65rem; font-weight:500; margin-bottom:1rem;'>"
+                f"{t('active_mistakes')}"
+                f"</h3>",
+                unsafe_allow_html=True,
+            )
+
+            if active_student_mistakes.empty:
+                st.info(t("no_recurring_mistakes_yet"))
+            else:
+                for _, mistake_row in active_student_mistakes.iterrows():
+                    # st.write(f"### {mistake_row['text']}")
+                    st.markdown(
+                        f"<div style='font-size:1.25rem; font-weight:600; margin-bottom:0.5rem;'>"
+                        f"{mistake_row['text']}"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    if pd.notna(mistake_row["note"]) and str(mistake_row["note"]).strip():
+                        st.write(
+                            f"**{t('mistake_note')}:** "
+                            f"{mistake_row['note']}"
+                        )
+
+                    mistake_id = int(mistake_row["id"])
+
+                    mistake_status_options = {
+                        t("mistake_active"): "active",
+                        t("mistake_resolved"): "resolved",
+                    }
+
+                    current_mistake_status = mistake_row["status"]
+
+                    current_mistake_status_label = next(
+                        label
+                        for label, value in mistake_status_options.items()
+                        if value == current_mistake_status
+                    )
+
+                    selected_mistake_status_label = st.selectbox(
+                        t("mistake_status"),
+                        list(mistake_status_options.keys()),
+                        index=list(mistake_status_options.keys()).index(
+                            current_mistake_status_label
+                        ),
+                        key=f"mistake_status_{mistake_id}",
+                    )
+
+                    selected_mistake_status = mistake_status_options[
+                        selected_mistake_status_label
+                    ]
+
+                    if selected_mistake_status != current_mistake_status:
+                        supabase.table("recurring_mistakes").update(
+                            {
+                                "status": selected_mistake_status,
+                            }
+                        ).eq(
+                            "id",
+                            mistake_id,
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        st.rerun()
+
+                    with st.expander(t("edit_mistake")):
+                        with st.form(f"edit_mistake_form_{mistake_id}"):
+                            edited_mistake_text = st.text_input(
+                                t("mistake_text"),
+                                value=mistake_row["text"],
+                                key=f"edit_mistake_text_{mistake_id}",
+                            )
+
+                            edited_mistake_note = st.text_area(
+                                t("mistake_note"),
+                                value=(
+                                    mistake_row["note"]
+                                    if pd.notna(mistake_row["note"])
+                                    else ""
+                                ),
+                                key=f"edit_mistake_note_{mistake_id}",
+                            )
+
+                            edit_mistake_submitted = st.form_submit_button(
+                                t("save_mistake_changes")
+                            )
+
+                    if edit_mistake_submitted:
+                        cleaned_edited_mistake = edited_mistake_text.strip()
+                        cleaned_edited_note = edited_mistake_note.strip()
+
+                        if not cleaned_edited_mistake:
+                            st.error(t("mistake_required"))
+                        else:
+                            supabase.table("recurring_mistakes").update(
+                                {
+                                    "text": cleaned_edited_mistake,
+                                    "note": cleaned_edited_note if cleaned_edited_note else None,
+                                }
+                            ).eq(
+                                "id",
+                                mistake_id,
+                            ).eq(
+                                "user_id",
+                                user_id,
+                            ).execute()
+
+                            st.success(t("mistake_updated_successfully"))
+                            st.rerun()
+
+                    st.caption(
+                        f"{t('delete_mistake')}: {mistake_row['text']}"
+                    )
+
+                    with st.form(f"delete_mistake_form_{mistake_id}"):
+                        confirm_delete_mistake = st.checkbox(
+                            t("confirm_delete_mistake"),
+                            key=f"confirm_delete_mistake_{mistake_id}",
+                        )
+
+                        delete_mistake_submitted = st.form_submit_button(
+                            t("delete_mistake")
+                        )
+
+                    if delete_mistake_submitted:
+                        if not confirm_delete_mistake:
+                            st.error(t("please_confirm_deletion"))
+                        else:
+                            supabase.table("recurring_mistakes").delete().eq(
+                                "id",
+                                mistake_id,
+                            ).eq(
+                                "user_id",
+                                user_id,
+                            ).execute()
+
+                            st.success(t("mistake_deleted_successfully"))
+                            st.rerun()
+
+                    st.divider()
+
+            resolved_student_mistakes = student_mistakes[
+                student_mistakes["status"] == "resolved"
+            ].copy()
+
+            with st.expander(t("resolved_mistakes")):
+                if resolved_student_mistakes.empty:
+                    st.info(t("no_resolved_mistakes"))
+                else:
+                    for _, mistake_row in resolved_student_mistakes.iterrows():
+                        resolved_mistake_id = int(mistake_row["id"])
+
+                        st.write(f"### {mistake_row['text']}")
+
+                        if pd.notna(mistake_row["note"]) and str(mistake_row["note"]).strip():
+                            st.write(
+                                f"**{t('mistake_note')}:** "
+                                f"{mistake_row['note']}"
+                            )
+
+                        resolved_status_options = {
+                            t("mistake_active"): "active",
+                            t("mistake_resolved"): "resolved",
+                        }
+
+                        current_resolved_status = mistake_row["status"]
+
+                        current_resolved_label = next(
+                            label
+                            for label, value in resolved_status_options.items()
+                            if value == current_resolved_status
+                        )
+
+                        selected_resolved_label = st.selectbox(
+                            t("mistake_status"),
+                            list(resolved_status_options.keys()),
+                            index=list(resolved_status_options.keys()).index(
+                                current_resolved_label
+                            ),
+                            key=f"resolved_mistake_status_{resolved_mistake_id}",
+                        )
+
+                        selected_resolved_status = resolved_status_options[
+                            selected_resolved_label
+                        ]
+
+                        if selected_resolved_status != current_resolved_status:
+                            supabase.table("recurring_mistakes").update(
+                                {
+                                    "status": selected_resolved_status,
+                                }
+                            ).eq(
+                                "id",
+                                resolved_mistake_id,
+                            ).eq(
+                                "user_id",
+                                user_id,
+                            ).execute()
+
+                            st.rerun()
+
+                        st.divider()
+
+            st.subheader(t("add_recurring_mistake"))
+
+            with st.form(
+                "add_recurring_mistake_form",
+                clear_on_submit=True,
+            ):
+                mistake_text = st.text_input(
+                    t("mistake_text"),
+                    placeholder=t("mistake_example"),
+                    key="recurring_mistake_text",
+                )
+
+                mistake_note = st.text_area(
+                    t("mistake_note"),
+                    placeholder=t("mistake_note_example"),
+                    key="recurring_mistake_note",
+                )
+
+                save_mistake_submitted = st.form_submit_button(
+                    t("save_mistake")
+                )
+
+
+            if save_mistake_submitted:
+                cleaned_mistake_text = mistake_text.strip()
+                cleaned_mistake_note = mistake_note.strip()
+
+                if not cleaned_mistake_text:
+                    st.error(t("mistake_required"))
+                else:
+                    active_mistakes_count = len(
+                        recurring_mistakes[
+                            (recurring_mistakes["student_id"] == selected_mistake_student_id)
+                            & (recurring_mistakes["status"] == "active")
+                        ]
+                    )
+
+                    if active_mistakes_count >= 5:
+                        st.error(t("maximum_active_mistakes"))
+                    else:
+                        new_mistake = {
+                            "user_id": user_id,
+                            "student_id": int(selected_mistake_student_id),
+                            "text": cleaned_mistake_text,
+                            "note": cleaned_mistake_note if cleaned_mistake_note else None,
+                            "status": "active",
+                        }
+
+                        supabase.table("recurring_mistakes").insert(
+                            new_mistake
+                        ).execute()
+
+                        st.success(t("mistake_added_successfully"))
+
+                        st.rerun()
+
+
     with progress_tab:
         st.header(t("progress"))
 
@@ -5661,367 +6086,334 @@ elif page == "Courses":
 
 elif page == "Lessons":
 
-    st.header(t("lessons"))
-
-    st.subheader(t("lesson_list"))
-
-    lessons_view = active_lessons.copy()
-
-    if not lessons_view.empty:
-        lessons_view = lessons_view.sort_values(
-            by=["lesson_date", "start_time"],
-            ascending=[True, True],
+    lessons_tab, assignments_tab = st.tabs(
+            [
+                t("lessons"),
+                t("assignments"),
+            ]
         )
 
-    if lessons_view.empty:
-        st.info(t("no_lessons_yet"))
+    with lessons_tab:
 
-    elif courses.empty:
-        st.info(t("no_courses_yet"))
+        st.header(t("lessons"))
 
-    else:
-        course_titles = dict(zip(courses["id"], courses["title"]))
+        st.subheader(t("lesson_list"))
 
-        lessons_view["course"] = lessons_view["course_id"].map(course_titles)
+        lessons_view = active_lessons.copy()
 
-        lessons_view = lessons_view[
-            ["course", "title", "lesson_date", "start_time", "duration_minutes"]
-        ]
-
-        st.dataframe(
-            lessons_view,
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "course": st.column_config.TextColumn(
-                    t("course"),
-                    width="medium",
-                ),
-                "title": st.column_config.TextColumn(
-                    t("title"),
-                    width="large",
-                ),
-                "lesson_date": st.column_config.TextColumn(
-                    t("date"),
-                    width="small",
-                ),
-                "start_time": st.column_config.TextColumn(
-                    t("time"),
-                    width="small",
-                ),
-                "duration_minutes": st.column_config.NumberColumn(
-                    t("minutes_short"),
-                    width="small",
-                ),
-            },
-        )
-    
-    st.subheader(t("lesson_details"))
-    
-    if lessons.empty:
-        st.info(t("no_lessons_yet"))
-    else:
-        course_titles = dict(zip(courses["id"], courses["title"]))
-
-        lesson_details_view = lessons.copy()
-
-        lesson_details_view = lesson_details_view.sort_values(
-            by=["lesson_date", "start_time"],
-            ascending=[True, True],
-        )
-
-        for _, row in lesson_details_view.iterrows():
-            course_name = course_titles.get(
-                row["course_id"],
-                t("unknown_course"),
-            )
-            
-            with st.expander(f"{row['title']}"):
-                st.write(
-                    f"**{t('course')}:** {course_name}"
-                )
-
-                st.write(
-                    f"**{t('date')}:** {row['lesson_date']}"
-                )
-
-                st.write(
-                    f"**{t('start_time')}:** {row['start_time']}"
-                )
-
-                st.write(
-                    f"**{t('duration')}:** "
-                    f"{row['duration_minutes']} {t('minutes')}"
-                )
-
-                st.write(
-                    f"**{t('lesson_goal')}:** {row['lesson_goal']}"
-                )
-
-                st.write(
-                    f"**{t('skills_focus')}:** {row['skills_focus']}"
-                )
-
-                st.write(
-                    f"**{t('materials')}:** {row['materials']}"
-                )
-
-                materials_url = row["materials_url"]
-
-                if not pd.isna(materials_url) and str(materials_url).strip() != "":
-                    st.markdown(
-                        f"**{t('materials_link')}:** "
-                        f"[{t('open_resource')}]({materials_url})"
-                    )
-
-                st.write(
-                    f"**{t('homework_template')}:** "
-                    f"{row['homework_template']}"
-                )
-
-                homework_url = row["homework_url"]
-
-                if not pd.isna(homework_url) and str(homework_url).strip() != "":
-                    st.markdown(
-                        f"**{t('homework_link')}:** "
-                        f"[{t('open_resource')}]({homework_url})"
-                    )
-
-    st.subheader(t("add_new_lesson"))
-    
-    if courses.empty:
-        st.warning(t("add_course_before_lessons"))
-    else:
-        course_options = {}
-
-        for _, row in courses.iterrows():
-            label = course_label(row)
-            course_options[label] = int(row["id"])
-
-        draft_response = (
-            supabase.table("lesson_drafts")
-            .select("*")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
-
-        lesson_draft = (
-            draft_response.data[0]
-            if draft_response.data
-            else {}
-        )
-
-        if lesson_draft:
-            st.info(t("draft_restored"))
-
-        course_labels = list(course_options.keys())
-
-        draft_course_id = lesson_draft.get("course_id")
-
-        draft_course_label = next(
-            (
-                label
-                for label, course_id in course_options.items()
-                if draft_course_id is not None
-                and int(course_id) == int(draft_course_id)
-            ),
-            course_labels[0],
-        )
-
-        draft_course_index = course_labels.index(draft_course_label)
-
-        draft_lesson_date = date.today()
-
-        if lesson_draft.get("lesson_date"):
-            draft_lesson_date = date.fromisoformat(
-                lesson_draft["lesson_date"]
+        if not lessons_view.empty:
+            lessons_view = lessons_view.sort_values(
+                by=["lesson_date", "start_time"],
+                ascending=[True, True],
             )
 
-        draft_start_time = datetime.now().replace(
-            second=0,
-            microsecond=0,
-        ).time()
+        if lessons_view.empty:
+            st.info(t("no_lessons_yet"))
 
-        if lesson_draft.get("start_time"):
-            draft_start_time = datetime.strptime(
-                lesson_draft["start_time"][:8],
-                "%H:%M:%S",
-            ).time()
+        elif courses.empty:
+            st.info(t("no_courses_yet"))
 
-        draft_duration = int(
-            lesson_draft.get("duration_minutes") or 60
-        )
+        else:
+            course_titles = dict(zip(courses["id"], courses["title"]))
 
-        draft_skills = [
-            skill.strip()
-            for skill in (lesson_draft.get("skills_focus") or "").split(",")
-            if skill.strip()
-        ]
+            lessons_view["course"] = lessons_view["course_id"].map(course_titles)
 
-        if "lesson_form_version" not in st.session_state:
-            st.session_state["lesson_form_version"] = 0
-
-        form_version = st.session_state["lesson_form_version"]
-        
-        with st.form(
-            f"add_lesson_form_{st.session_state['lesson_form_version']}",
-            clear_on_submit=False,
-        ):
-            selected_course = st.selectbox(
-                t("course"),
-                course_labels,
-                index=draft_course_index,
-                key=f"lesson_course_{form_version}",
-            )
-            title = st.text_input(
-                t("lesson_title"),
-                value=lesson_draft.get("title", ""),
-                key=f"lesson_title_{form_version}",
-            )
-
-            lesson_date = st.date_input(
-                t("lesson_date"),
-                value=draft_lesson_date,
-                key=f"lesson_date_{form_version}",
-            )
-
-            start_time = st.time_input(
-                t("start_time"),
-                value=draft_start_time,
-                step=300,
-                key=f"lesson_start_time_{form_version}",
-            )
-        
-            duration_minutes = st.number_input(
-                t("duration_minutes"),
-                min_value=15,
-                max_value=240,
-                value=draft_duration,
-                step=15,
-                key=f"lesson_duration_{form_version}",
-            )
-
-            lesson_goal = st.text_area(
-                t("lesson_goal"),
-                value=lesson_draft.get("lesson_goal", ""),
-                key=f"lesson_goal_{form_version}",
-            )
-            skill_options = [
-                "listening",
-                "reading",
-                "speaking",
-                "writing",
-                "grammar",
-                "vocabulary",
+            lessons_view = lessons_view[
+                ["course", "title", "lesson_date", "start_time", "duration_minutes"]
             ]
 
-            skills_focus = st.multiselect(
-                t("skills_focus"),
-                skill_options,
-                default=[
-                    skill
-                    for skill in draft_skills
-                    if skill in skill_options
-                ],
-                format_func=lambda value: t(value),
-                key=f"lesson_skills_{form_version}",
-            )
-
-            materials = st.text_area(
-                t("materials"),
-                value=lesson_draft.get("materials", ""),
-                key=f"lesson_materials_{form_version}",
-            )
-
-            materials_url = st.text_input(
-                t("materials_url"),
-                value=lesson_draft.get("materials_url", ""),
-                key=f"lesson_materials_url_{form_version}",
-            )
-
-            homework_template = st.text_area(
-                t("homework_template"),
-                value=lesson_draft.get("homework_template", ""),
-                key=f"lesson_homework_template_{form_version}",
-            )
-
-            homework_url = st.text_input(
-                t("homework_url"),
-                value=lesson_draft.get("homework_url", ""),
-                key=f"lesson_homework_url_{form_version}",
-            )
-
-            draft_col, lesson_col, delete_draft_col = st.columns(
-                [1, 1, 1],
-                gap="small",
-            )
-
-            with draft_col:
-                draft_submitted = st.form_submit_button(
-                    t("save_draft"),
-                    key=f"save_draft_button_{form_version}",
-                    width="stretch",
-                )
-
-            with lesson_col:
-                lesson_submitted = st.form_submit_button(
-                    t("add_lesson"),
-                    key=f"add_lesson_button_{form_version}",
-                    width="stretch",
-                )
-
-            with delete_draft_col:
-                delete_draft_submitted = st.form_submit_button(
-                    t("delete_draft"),
-                    key=f"delete_draft_button_{form_version}",
-                    width="stretch",
-                )
-
-            if draft_submitted:
-                lesson_draft = {
-                    "user_id": user_id,
-                    "course_id": int(course_options[selected_course]),
-                    "title": title,
-                    "lesson_date": str(lesson_date),
-                    "start_time": str(start_time),
-                    "duration_minutes": int(duration_minutes),
-                    "lesson_goal": lesson_goal,
-                    "skills_focus": (
-                        ", ".join(skills_focus)
-                        if isinstance(skills_focus, list)
-                        else skills_focus
+            st.dataframe(
+                lessons_view,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "course": st.column_config.TextColumn(
+                        t("course"),
+                        width="medium",
                     ),
-                    "materials": materials,
-                    "materials_url": materials_url,
-                    "homework_template": homework_template,
-                    "homework_url": homework_url,
-                    "updated_at": datetime.now().isoformat(),
-                }
+                    "title": st.column_config.TextColumn(
+                        t("title"),
+                        width="large",
+                    ),
+                    "lesson_date": st.column_config.TextColumn(
+                        t("date"),
+                        width="small",
+                    ),
+                    "start_time": st.column_config.TextColumn(
+                        t("time"),
+                        width="small",
+                    ),
+                    "duration_minutes": st.column_config.NumberColumn(
+                        t("minutes_short"),
+                        width="small",
+                    ),
+                },
+            )
+        
+        st.subheader(t("lesson_details"))
+        
+        if lessons.empty:
+            st.info(t("no_lessons_yet"))
+        else:
+            course_titles = dict(zip(courses["id"], courses["title"]))
 
-                supabase.table("lesson_drafts").upsert(
-                    lesson_draft,
-                    on_conflict="user_id",
-                ).execute()
+            lesson_details_view = lessons.copy()
 
-                st.success(t("draft_saved"))
+            lesson_details_view = lesson_details_view.sort_values(
+                by=["lesson_date", "start_time"],
+                ascending=[True, True],
+            )
 
-            elif delete_draft_submitted:
-                supabase.table("lesson_drafts").delete().eq(
-                    "user_id",
-                    user_id,
-                ).execute()
+            for _, row in lesson_details_view.iterrows():
+                course_name = course_titles.get(
+                    row["course_id"],
+                    t("unknown_course"),
+                )
+                
+                with st.expander(f"{row['title']}"):
+                    st.write(
+                        f"**{t('course')}:** {course_name}"
+                    )
 
-                st.session_state["lesson_form_version"] += 1
+                    st.write(
+                        f"**{t('date')}:** {row['lesson_date']}"
+                    )
 
-                st.success(t("draft_deleted"))
-                st.rerun()
-                                    
-            elif lesson_submitted:
-                if title.strip() == "":
-                    st.error(t("please_enter_lesson_title"))
-                else:
-                    new_lesson = {
+                    st.write(
+                        f"**{t('start_time')}:** {row['start_time']}"
+                    )
+
+                    st.write(
+                        f"**{t('duration')}:** "
+                        f"{row['duration_minutes']} {t('minutes')}"
+                    )
+
+                    st.write(
+                        f"**{t('lesson_goal')}:** {row['lesson_goal']}"
+                    )
+
+                    st.write(
+                        f"**{t('skills_focus')}:** {row['skills_focus']}"
+                    )
+
+                    st.write(
+                        f"**{t('materials')}:** {row['materials']}"
+                    )
+
+                    materials_url = row["materials_url"]
+
+                    if not pd.isna(materials_url) and str(materials_url).strip() != "":
+                        st.markdown(
+                            f"**{t('materials_link')}:** "
+                            f"[{t('open_resource')}]({materials_url})"
+                        )
+
+                    st.write(
+                        f"**{t('homework_template')}:** "
+                        f"{row['homework_template']}"
+                    )
+
+                    homework_url = row["homework_url"]
+
+                    if not pd.isna(homework_url) and str(homework_url).strip() != "":
+                        st.markdown(
+                            f"**{t('homework_link')}:** "
+                            f"[{t('open_resource')}]({homework_url})"
+                        )
+
+        st.subheader(t("add_new_lesson"))
+        
+        if courses.empty:
+            st.warning(t("add_course_before_lessons"))
+        else:
+            course_options = {}
+
+            for _, row in courses.iterrows():
+                label = course_label(row)
+                course_options[label] = int(row["id"])
+
+            draft_response = (
+                supabase.table("lesson_drafts")
+                .select("*")
+                .eq("user_id", user_id)
+                .limit(1)
+                .execute()
+            )
+
+            lesson_draft = (
+                draft_response.data[0]
+                if draft_response.data
+                else {}
+            )
+
+            if lesson_draft:
+                st.info(t("draft_restored"))
+
+            course_labels = list(course_options.keys())
+
+            draft_course_id = lesson_draft.get("course_id")
+
+            draft_course_label = next(
+                (
+                    label
+                    for label, course_id in course_options.items()
+                    if draft_course_id is not None
+                    and int(course_id) == int(draft_course_id)
+                ),
+                course_labels[0],
+            )
+
+            draft_course_index = course_labels.index(draft_course_label)
+
+            draft_lesson_date = date.today()
+
+            if lesson_draft.get("lesson_date"):
+                draft_lesson_date = date.fromisoformat(
+                    lesson_draft["lesson_date"]
+                )
+
+            draft_start_time = datetime.now().replace(
+                second=0,
+                microsecond=0,
+            ).time()
+
+            if lesson_draft.get("start_time"):
+                draft_start_time = datetime.strptime(
+                    lesson_draft["start_time"][:8],
+                    "%H:%M:%S",
+                ).time()
+
+            draft_duration = int(
+                lesson_draft.get("duration_minutes") or 60
+            )
+
+            draft_skills = [
+                skill.strip()
+                for skill in (lesson_draft.get("skills_focus") or "").split(",")
+                if skill.strip()
+            ]
+
+            if "lesson_form_version" not in st.session_state:
+                st.session_state["lesson_form_version"] = 0
+
+            form_version = st.session_state["lesson_form_version"]
+            
+            with st.form(
+                f"add_lesson_form_{st.session_state['lesson_form_version']}",
+                clear_on_submit=False,
+            ):
+                selected_course = st.selectbox(
+                    t("course"),
+                    course_labels,
+                    index=draft_course_index,
+                    key=f"lesson_course_{form_version}",
+                )
+                title = st.text_input(
+                    t("lesson_title"),
+                    value=lesson_draft.get("title", ""),
+                    key=f"lesson_title_{form_version}",
+                )
+
+                lesson_date = st.date_input(
+                    t("lesson_date"),
+                    value=draft_lesson_date,
+                    key=f"lesson_date_{form_version}",
+                )
+
+                start_time = st.time_input(
+                    t("start_time"),
+                    value=draft_start_time,
+                    step=300,
+                    key=f"lesson_start_time_{form_version}",
+                )
+            
+                duration_minutes = st.number_input(
+                    t("duration_minutes"),
+                    min_value=15,
+                    max_value=240,
+                    value=draft_duration,
+                    step=15,
+                    key=f"lesson_duration_{form_version}",
+                )
+
+                lesson_goal = st.text_area(
+                    t("lesson_goal"),
+                    value=lesson_draft.get("lesson_goal", ""),
+                    key=f"lesson_goal_{form_version}",
+                )
+                skill_options = [
+                    "listening",
+                    "reading",
+                    "speaking",
+                    "writing",
+                    "grammar",
+                    "vocabulary",
+                ]
+
+                skills_focus = st.multiselect(
+                    t("skills_focus"),
+                    skill_options,
+                    default=[
+                        skill
+                        for skill in draft_skills
+                        if skill in skill_options
+                    ],
+                    format_func=lambda value: t(value),
+                    key=f"lesson_skills_{form_version}",
+                )
+
+                materials = st.text_area(
+                    t("materials"),
+                    value=lesson_draft.get("materials", ""),
+                    key=f"lesson_materials_{form_version}",
+                )
+
+                materials_url = st.text_input(
+                    t("materials_url"),
+                    value=lesson_draft.get("materials_url", ""),
+                    key=f"lesson_materials_url_{form_version}",
+                )
+
+                homework_template = st.text_area(
+                    t("homework_template"),
+                    value=lesson_draft.get("homework_template", ""),
+                    key=f"lesson_homework_template_{form_version}",
+                )
+
+                homework_url = st.text_input(
+                    t("homework_url"),
+                    value=lesson_draft.get("homework_url", ""),
+                    key=f"lesson_homework_url_{form_version}",
+                )
+
+                draft_col, lesson_col, delete_draft_col = st.columns(
+                    [1, 1, 1],
+                    gap="small",
+                )
+
+                with draft_col:
+                    draft_submitted = st.form_submit_button(
+                        t("save_draft"),
+                        key=f"save_draft_button_{form_version}",
+                        width="stretch",
+                    )
+
+                with lesson_col:
+                    lesson_submitted = st.form_submit_button(
+                        t("add_lesson"),
+                        key=f"add_lesson_button_{form_version}",
+                        width="stretch",
+                    )
+
+                with delete_draft_col:
+                    delete_draft_submitted = st.form_submit_button(
+                        t("delete_draft"),
+                        key=f"delete_draft_button_{form_version}",
+                        width="stretch",
+                    )
+
+                if draft_submitted:
+                    lesson_draft = {
                         "user_id": user_id,
                         "course_id": int(course_options[selected_course]),
                         "title": title,
@@ -6029,16 +6421,26 @@ elif page == "Lessons":
                         "start_time": str(start_time),
                         "duration_minutes": int(duration_minutes),
                         "lesson_goal": lesson_goal,
-                        "skills_focus": ", ".join(skills_focus) if isinstance(skills_focus, list) else skills_focus,
+                        "skills_focus": (
+                            ", ".join(skills_focus)
+                            if isinstance(skills_focus, list)
+                            else skills_focus
+                        ),
                         "materials": materials,
                         "materials_url": materials_url,
                         "homework_template": homework_template,
                         "homework_url": homework_url,
-                        "is_archived": False,
+                        "updated_at": datetime.now().isoformat(),
                     }
 
-                    supabase.table("lessons").insert(new_lesson).execute()
+                    supabase.table("lesson_drafts").upsert(
+                        lesson_draft,
+                        on_conflict="user_id",
+                    ).execute()
 
+                    st.success(t("draft_saved"))
+
+                elif delete_draft_submitted:
                     supabase.table("lesson_drafts").delete().eq(
                         "user_id",
                         user_id,
@@ -6046,1945 +6448,1030 @@ elif page == "Lessons":
 
                     st.session_state["lesson_form_version"] += 1
 
-                    st.success(t("lesson_added_successfully"))
+                    st.success(t("draft_deleted"))
                     st.rerun()
+                                        
+                elif lesson_submitted:
+                    if title.strip() == "":
+                        st.error(t("please_enter_lesson_title"))
+                    else:
+                        new_lesson = {
+                            "user_id": user_id,
+                            "course_id": int(course_options[selected_course]),
+                            "title": title,
+                            "lesson_date": str(lesson_date),
+                            "start_time": str(start_time),
+                            "duration_minutes": int(duration_minutes),
+                            "lesson_goal": lesson_goal,
+                            "skills_focus": ", ".join(skills_focus) if isinstance(skills_focus, list) else skills_focus,
+                            "materials": materials,
+                            "materials_url": materials_url,
+                            "homework_template": homework_template,
+                            "homework_url": homework_url,
+                            "is_archived": False,
+                        }
+
+                        supabase.table("lessons").insert(new_lesson).execute()
+
+                        supabase.table("lesson_drafts").delete().eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        st.session_state["lesson_form_version"] += 1
+
+                        st.success(t("lesson_added_successfully"))
+                        st.rerun()
+
+        st.subheader(t("edit_lesson"))
+
+        if lessons.empty:
+            st.info(t("no_lessons_to_edit"))
 
-    st.subheader(t("edit_lesson"))
-
-    if lessons.empty:
-        st.info(t("no_lessons_to_edit"))
-
-    else:
-        lesson_options = {
-            f"{row['id']} — {row['title']}": int(row["id"])
-            for _, row in lessons.iterrows()
-        }
-
-        selected_lesson_to_edit = st.selectbox(
-            t("select_lesson_to_edit"),
-            list(lesson_options.keys()),
-            key="edit_lesson_select",
-        )
-
-        lesson_id_to_edit = lesson_options[selected_lesson_to_edit]
-        lesson_row = lessons[lessons["id"].astype(int) == int(lesson_id_to_edit)].iloc[0]
-
-        if "edit_lesson_form_version" not in st.session_state:
-            st.session_state["edit_lesson_form_version"] = 0
-
-        edit_lesson_form_version = st.session_state["edit_lesson_form_version"]
-
-        with st.form(
-            f"edit_lesson_form_{lesson_id_to_edit}_{edit_lesson_form_version}"
-        ):
-            edited_title = st.text_input(
-                t("lesson_title"),
-                value=lesson_row["title"],
-                key=f"edit_lesson_title_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            current_lesson_date = lesson_row["lesson_date"]
-            if pd.isna(current_lesson_date) or str(current_lesson_date).strip() == "":
-                current_lesson_date = pd.Timestamp.today().date()
-            else:
-                current_lesson_date = pd.to_datetime(current_lesson_date).date()
-
-            edited_lesson_date = st.date_input(
-                t("lesson_date"),
-                value=current_lesson_date,
-                key=f"edit_lesson_date_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            current_start_time = lesson_row["start_time"]
-            if pd.isna(current_start_time) or str(current_start_time).strip() == "":
-                current_start_time = pd.to_datetime("13:00").time()
-            else:
-                current_start_time = pd.to_datetime(str(current_start_time)).time()
-
-            edited_start_time = st.time_input(
-                t("start_time"),
-                value=current_start_time,
-                key=f"edit_lesson_start_time_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            edited_duration_minutes = st.number_input(
-                t("duration_minutes"),
-                min_value=15,
-                max_value=240,
-                value=int(lesson_row["duration_minutes"]),
-                step=15,
-                key=f"edit_lesson_duration_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            edited_lesson_goal = st.text_area(
-                t("lesson_goal"),
-                value=lesson_row["lesson_goal"],
-                key=f"edit_lesson_goal_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            skill_options = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
-
-            current_skills_focus = lesson_row["skills_focus"]
-
-            if pd.isna(current_skills_focus) or str(current_skills_focus).strip() in ["", "[]", "None", "nan"]:
-                current_skills_focus = []
-            else:
-                current_skills_focus = [
-                    skill.strip()
-                    for skill in str(current_skills_focus).split(",")
-                    if skill.strip() in skill_options
-                ]
-
-            edited_skills_focus = st.multiselect(
-                t("skills_focus"),
-                skill_options,
-                default=current_skills_focus,
-                format_func=lambda value: t(value),
-                key=f"edit_lesson_skills_{lesson_id_to_edit}_{edit_lesson_form_version}",
-            )
-
-            edited_materials = st.text_area(
-                t("materials"),
-                value=lesson_row["materials"],
-                key=f"edit_lesson_materials_{lesson_id_to_edit}_{edit_lesson_form_version}"
-            )
-
-            current_materials_url = lesson_row["materials_url"]
-            if pd.isna(current_materials_url):
-                current_materials_url = ""
-
-            edited_materials_url = st.text_input(
-                t("materials_url"),
-                value=current_materials_url,
-                key=f"edit_lesson_materials_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
-            )
-
-            edited_homework_template = st.text_area(
-                t("homework_template"),
-                value=lesson_row["homework_template"],
-                key=f"edit_lesson_homework_template_{lesson_id_to_edit}_{edit_lesson_form_version}"
-            )
-
-            current_homework_url = lesson_row["homework_url"]
-            if pd.isna(current_homework_url):
-                current_homework_url = ""
-
-            edited_homework_url = st.text_input(
-                t("homework_url"),
-                value=current_homework_url,
-                key=f"edit_lesson_homework_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
-            )
-
-            edit_lesson_submitted = st.form_submit_button(
-                t("save_lesson_changes")
-            )
-
-            if edit_lesson_submitted:
-                if edited_title.strip() == "":
-                    st.error(t("please_enter_lesson_title"))
-                else:
-                    updated_lesson = {
-                        "title": edited_title,
-                        "lesson_date": str(edited_lesson_date),
-                        "start_time": str(edited_start_time),
-                        "duration_minutes": int(edited_duration_minutes),
-                        "lesson_goal": edited_lesson_goal,
-                        "skills_focus": ", ".join(edited_skills_focus),
-                        "materials": edited_materials,
-                        "materials_url": edited_materials_url,
-                        "homework_template": edited_homework_template,
-                        "homework_url": edited_homework_url,
-                    }
-
-                    supabase.table("lessons").update(updated_lesson).eq(
-                        "id",
-                        int(lesson_id_to_edit)
-                    ).eq(
-                        "user_id",
-                        user_id
-                    ).execute()
-
-                    st.session_state["edit_lesson_form_version"] += 1
-
-                    st.success(t("lesson_updated_successfully"))
-                    st.rerun()
-                
-    st.subheader(t("archive_lesson"))
-
-    if active_lessons.empty:
-        st.info(t("no_active_lessons_to_archive"))
-    else:
-        course_titles = dict(zip(courses["id"], courses["title"]))
-
-        archive_lesson_options = {}
-
-        for _, row in active_lessons.iterrows():
-            course_name = course_titles.get(
-                row["course_id"],
-                t("unknown_course"),
-            )
-            label = f"{row['id']} — {row['title']} ({course_name})"
-            archive_lesson_options[label] = int(row["id"])
-
-        with st.form("archive_lesson_form"):
-            lesson_to_archive = st.selectbox(
-                t("select_lesson_to_archive"),
-                list(archive_lesson_options.keys()),
-                key="archive_lesson_select",
-            )
-
-            confirm_archive_lesson = st.checkbox(
-                t("confirm_archive_lesson")
-            )
-
-            archive_lesson_submitted = st.form_submit_button(
-                t("archive_lesson")
-            )
-
-            if archive_lesson_submitted:
-                if not confirm_archive_lesson:
-                    st.error(t("please_confirm_archiving"))
-                else:
-                    lesson_id_to_archive = archive_lesson_options[lesson_to_archive]
-
-                    supabase.table("lessons").update(
-                        {"is_archived": True}
-                    ).eq(
-                        "id",
-                        int(lesson_id_to_archive)
-                    ).eq(
-                        "user_id",
-                        user_id
-                    ).execute()
-
-                    st.success(t("lesson_archived_successfully"))
-                    st.rerun()
-               
-    st.subheader(t("archived_lessons"))
-
-    archived_lessons = lessons[lessons["is_archived"] == True].copy()
-
-    if archived_lessons.empty:
-        st.info(t("no_archived_lessons_yet"))
-    else:
-        course_titles = dict(zip(courses["id"], courses["title"]))
-
-        archived_lessons["course"] = archived_lessons["course_id"].map(course_titles)
-
-        archived_lessons_view = archived_lessons[
-            ["course", "title"]
-        ]
-
-        st.dataframe(
-            archived_lessons_view,
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "course": st.column_config.TextColumn(
-                    t("course"),
-                    width="medium",
-                ),
-                "title": st.column_config.TextColumn(
-                    t("title"),
-                    width="large",
-                ),
-            }
-        )
-    
-    st.subheader(t("restore_lesson"))
-
-    archived_lessons = lessons[lessons["is_archived"] == True].copy()
-
-    if archived_lessons.empty:
-        st.info(t("no_archived_lessons_to_restore"))
-    else:
-        course_titles = dict(zip(courses["id"], courses["title"]))
-
-        restore_lesson_options = {}
-
-        for _, row in archived_lessons.iterrows():
-            course_name = course_titles.get(
-                row["course_id"],
-                t("unknown_course"),
-            )
-            label = f"{row['id']} — {row['title']} ({course_name})"
-            restore_lesson_options[label] = int(row["id"])
-
-        with st.form("restore_lesson_form"):
-            lesson_to_restore = st.selectbox(
-                t("select_lesson_to_restore"),
-                list(restore_lesson_options.keys()),
-                key="restore_lesson_select",
-            )
-
-            confirm_restore_lesson = st.checkbox(
-                t("confirm_restore_lesson")
-            )
-
-            restore_lesson_submitted = st.form_submit_button(
-                t("restore_lesson")
-            )
-
-            if restore_lesson_submitted:
-                if not confirm_restore_lesson:
-                    st.error(t("please_confirm_restore"))
-                else:
-                    lesson_id_to_restore = restore_lesson_options[lesson_to_restore]
-
-                    supabase.table("lessons").update(
-                        {"is_archived": False}
-                    ).eq(
-                        "id",
-                        int(lesson_id_to_restore)
-                    ).eq(
-                        "user_id",
-                        user_id
-                    ).execute()
-
-                    st.success(t("lesson_restored_successfully"))
-                    st.rerun()
-
-    st.subheader(t("delete_archived_lesson"))
-
-    archived_lessons_to_delete = lessons[
-        lessons["is_archived"] == True
-    ].copy()
-
-    if archived_lessons_to_delete.empty:
-        st.info(t("no_archived_lessons_to_delete"))
-
-    else:
-        course_titles = dict(
-            zip(courses["id"], courses["title"])
-        )
-
-        delete_archived_lesson_options = {}
-
-        for _, row in archived_lessons_to_delete.iterrows():
-            course_name = course_titles.get(
-                row["course_id"],
-                t("unknown_course"),
-            )
-
-            label = (
-                f"{row['id']} — {row['title']} "
-                f"({course_name})"
-            )
-
-            delete_archived_lesson_options[label] = int(row["id"])
-
-        with st.form("delete_archived_lesson_form"):
-            lesson_to_delete = st.selectbox(
-                t("select_archived_lesson_to_delete"),
-                list(delete_archived_lesson_options.keys()),
-                key="delete_archived_lesson_select",
-            )
-
-            confirm_delete_archived_lesson = st.checkbox(
-                t("confirm_delete_archived_lesson")
-            )
-
-            delete_archived_lesson_submitted = (
-                st.form_submit_button(
-                    t("delete_archived_lesson")
-                )
-            )
-
-            if delete_archived_lesson_submitted:
-                if not confirm_delete_archived_lesson:
-                    st.error(
-                        t("please_confirm_lesson_deletion")
-                    )
-
-                else:
-                    lesson_id_to_delete = (
-                        delete_archived_lesson_options[
-                            lesson_to_delete
-                        ]
-                    )
-
-                    supabase.table("assignments").delete().eq(
-                        "lesson_id",
-                        int(lesson_id_to_delete),
-                    ).eq(
-                        "user_id",
-                        user_id,
-                    ).execute()
-
-                    supabase.table("progress").delete().eq(
-                        "lesson_id",
-                        int(lesson_id_to_delete),
-                    ).eq(
-                        "user_id",
-                        user_id,
-                    ).execute()
-
-                    supabase.table("lessons").delete().eq(
-                        "id",
-                        int(lesson_id_to_delete),
-                    ).eq(
-                        "user_id",
-                        user_id,
-                    ).execute()
-
-                    st.success(
-                        t("archived_lesson_deleted_successfully")
-                    )
-
-                    st.rerun()
-
-
-elif page == "Assignments":
-
-    st.header(t("assignments"))
-
-    st.subheader(t("assignment_list"))
-
-    assignments_view = assignments.copy()
-
-    if assignments_view.empty:
-        st.info(t("no_assignments_yet"))
-
-    else:
-        student_names = dict(zip(students["id"], students["name"]))
-        course_titles = dict(zip(courses["id"], courses["title"]))
-        lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-        lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
-        lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
-
-        assignments_view["student"] = assignments_view["student_id"].map(student_names)
-        assignments_view["course"] = assignments_view["course_id"].map(course_titles)
-        assignments_view["lesson"] = assignments_view["lesson_id"].map(lesson_titles)
-        assignments_view["lesson_date"] = assignments_view["lesson_id"].map(
-            lesson_dates
-        )
-
-        assignments_view["start_time"] = assignments_view["lesson_id"].map(
-            lesson_times
-        )
-
-        assignments_view = assignments_view.sort_values(
-            by=["lesson_date", "start_time", "student"],
-            ascending=[True, True, True],
-            na_position="last",
-        )
-
-
-        assignments_view["status"] = assignments_view["status"].apply(
-            lambda value: t(ASSIGNMENT_STATUS_TRANSLATION_KEYS[value])
-        )
-
-        assignments_view["evaluation"] = assignments_view["evaluation"].apply(
-            lambda value: t(EVALUATION_TRANSLATION_KEYS[value])
-        )
-
-        assignments_view = assignments_view[
-            ["student", "lesson", "status", "evaluation"]
-        ]
-
-        st.dataframe(
-            assignments_view,
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "student": st.column_config.TextColumn(
-                    t("student"),
-                    width="medium",
-                ),
-                "lesson": st.column_config.TextColumn(
-                    t("lesson"),
-                    width="large",
-                ),
-                "status": st.column_config.TextColumn(
-                    t("status"),
-                    width="small",
-                ),
-                "evaluation": st.column_config.TextColumn(
-                    t("evaluation"),
-                    width="medium",
-                ),
-            },
-        )
-        
-    st.subheader(t("assignment_details"))
-
-    if assignments.empty:
-        st.info(t("no_assignments_yet"))
-    else:
-        student_names = dict(zip(students["id"], students["name"]))
-        course_titles = dict(zip(courses["id"], courses["title"]))
-        lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-        lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
-        lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
-
-        assignment_details_view = assignments.copy()
-
-        assignment_details_view["student"] = (
-            assignment_details_view["student_id"].map(student_names)
-        )
-
-        assignment_details_view["lesson_date"] = (
-            assignment_details_view["lesson_id"].map(lesson_dates)
-        )
-
-        assignment_details_view["start_time"] = (
-            assignment_details_view["lesson_id"].map(lesson_times)
-        )
-
-        assignment_details_view = assignment_details_view.sort_values(
-            by=["lesson_date", "start_time", "student"],
-            ascending=[True, True, True],
-            na_position="last",
-        )
-        
-        for _, row in assignment_details_view.iterrows():
-            student_name = row["student"]
-
-            course_name = course_titles.get(
-                row["course_id"],
-                t("unknown_course"),
-            )
-
-            lesson_name = lesson_titles.get(
-                row["lesson_id"],
-                t("unknown_lesson"),
-            )
-            
-            with st.expander(f"{student_name} – {lesson_name}"):
-
-                st.write(
-                    f"**{t('student')}:** {student_name}"
-                )
-
-                st.write(
-                    f"**{t('course')}:** {course_name}"
-                )
-
-                st.write(
-                    f"**{t('lesson')}:** {lesson_name}"
-                )
-
-                st.write(
-                    f"**{t('homework')}:** {row['homework']}"
-                )
-
-                st.write(
-                    f"**{t('status')}:** {row['status']}"
-                )
-
-                st.write(
-                    f"**{t('evaluation')}:** {row['evaluation']}"
-                )
-
-                st.write(
-                    f"**{t('teacher_comments')}:** {row['comments']}"
-                )
-    
-    st.subheader(t("add_new_assignment"))
-
-    if students.empty:
-        st.warning(t("add_student_before_assignments"))
-
-    elif courses.empty:
-        st.warning(t("add_course_before_assignments"))
-
-    elif lessons.empty:
-        st.warning(t("add_lesson_before_assignments"))
-
-    else:
-
-        student_options = {
-            student_label(row): int(row["id"])
-            for _, row in students.iterrows()
-        }
-
-        course_options = {
-            f"{row['id']} – {row['title']} "
-            f"({row['target_language']} {row['level']} "
-            f"· taught in {row['instruction_language']})": int(row["id"])
-            for _, row in courses.iterrows()
-        }
-            
-        selected_student = st.selectbox(
-            t("student"),
-            list(student_options.keys()),
-            key="assignment_student",
-        )
-
-        selected_course = st.selectbox(
-            t("course"),
-            list(course_options.keys()),
-            key="assignment_course",
-        )
-            
-        selected_course_id = course_options[selected_course]
-
-        selected_student_id = int(student_options[selected_student])
-
-        filtered_lessons = active_lessons[
-            active_lessons["course_id"].astype(int) == int(selected_course_id)
-        ]
-
-        if filtered_lessons.empty:
-            st.warning(t("course_has_no_lessons"))
-            selected_lesson = None
-            lesson_options = {}
         else:
             lesson_options = {
                 f"{row['id']} — {row['title']}": int(row["id"])
-                for _, row in filtered_lessons.iterrows()
+                for _, row in lessons.iterrows()
             }
-        
-            selected_lesson = st.selectbox(
-                t("lesson"),
+
+            selected_lesson_to_edit = st.selectbox(
+                t("select_lesson_to_edit"),
                 list(lesson_options.keys()),
-                key="assignment_lesson",
+                key="edit_lesson_select",
             )
-        selected_lesson_id = (
-            int(lesson_options[selected_lesson])
-            if selected_lesson is not None
-            else None
-        )
+
+            lesson_id_to_edit = lesson_options[selected_lesson_to_edit]
+            lesson_row = lessons[lessons["id"].astype(int) == int(lesson_id_to_edit)].iloc[0]
+
+            if "edit_lesson_form_version" not in st.session_state:
+                st.session_state["edit_lesson_form_version"] = 0
+
+            edit_lesson_form_version = st.session_state["edit_lesson_form_version"]
+
+            with st.form(
+                f"edit_lesson_form_{lesson_id_to_edit}_{edit_lesson_form_version}"
+            ):
+                edited_title = st.text_input(
+                    t("lesson_title"),
+                    value=lesson_row["title"],
+                    key=f"edit_lesson_title_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                current_lesson_date = lesson_row["lesson_date"]
+                if pd.isna(current_lesson_date) or str(current_lesson_date).strip() == "":
+                    current_lesson_date = pd.Timestamp.today().date()
+                else:
+                    current_lesson_date = pd.to_datetime(current_lesson_date).date()
+
+                edited_lesson_date = st.date_input(
+                    t("lesson_date"),
+                    value=current_lesson_date,
+                    key=f"edit_lesson_date_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                current_start_time = lesson_row["start_time"]
+                if pd.isna(current_start_time) or str(current_start_time).strip() == "":
+                    current_start_time = pd.to_datetime("13:00").time()
+                else:
+                    current_start_time = pd.to_datetime(str(current_start_time)).time()
+
+                edited_start_time = st.time_input(
+                    t("start_time"),
+                    value=current_start_time,
+                    key=f"edit_lesson_start_time_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                edited_duration_minutes = st.number_input(
+                    t("duration_minutes"),
+                    min_value=15,
+                    max_value=240,
+                    value=int(lesson_row["duration_minutes"]),
+                    step=15,
+                    key=f"edit_lesson_duration_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                edited_lesson_goal = st.text_area(
+                    t("lesson_goal"),
+                    value=lesson_row["lesson_goal"],
+                    key=f"edit_lesson_goal_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                skill_options = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
+
+                current_skills_focus = lesson_row["skills_focus"]
+
+                if pd.isna(current_skills_focus) or str(current_skills_focus).strip() in ["", "[]", "None", "nan"]:
+                    current_skills_focus = []
+                else:
+                    current_skills_focus = [
+                        skill.strip()
+                        for skill in str(current_skills_focus).split(",")
+                        if skill.strip() in skill_options
+                    ]
+
+                edited_skills_focus = st.multiselect(
+                    t("skills_focus"),
+                    skill_options,
+                    default=current_skills_focus,
+                    format_func=lambda value: t(value),
+                    key=f"edit_lesson_skills_{lesson_id_to_edit}_{edit_lesson_form_version}",
+                )
+
+                edited_materials = st.text_area(
+                    t("materials"),
+                    value=lesson_row["materials"],
+                    key=f"edit_lesson_materials_{lesson_id_to_edit}_{edit_lesson_form_version}"
+                )
+
+                current_materials_url = lesson_row["materials_url"]
+                if pd.isna(current_materials_url):
+                    current_materials_url = ""
+
+                edited_materials_url = st.text_input(
+                    t("materials_url"),
+                    value=current_materials_url,
+                    key=f"edit_lesson_materials_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
+                )
+
+                edited_homework_template = st.text_area(
+                    t("homework_template"),
+                    value=lesson_row["homework_template"],
+                    key=f"edit_lesson_homework_template_{lesson_id_to_edit}_{edit_lesson_form_version}"
+                )
+
+                current_homework_url = lesson_row["homework_url"]
+                if pd.isna(current_homework_url):
+                    current_homework_url = ""
+
+                edited_homework_url = st.text_input(
+                    t("homework_url"),
+                    value=current_homework_url,
+                    key=f"edit_lesson_homework_url_{lesson_id_to_edit}_{edit_lesson_form_version}"
+                )
+
+                edit_lesson_submitted = st.form_submit_button(
+                    t("save_lesson_changes")
+                )
+
+                if edit_lesson_submitted:
+                    if edited_title.strip() == "":
+                        st.error(t("please_enter_lesson_title"))
+                    else:
+                        updated_lesson = {
+                            "title": edited_title,
+                            "lesson_date": str(edited_lesson_date),
+                            "start_time": str(edited_start_time),
+                            "duration_minutes": int(edited_duration_minutes),
+                            "lesson_goal": edited_lesson_goal,
+                            "skills_focus": ", ".join(edited_skills_focus),
+                            "materials": edited_materials,
+                            "materials_url": edited_materials_url,
+                            "homework_template": edited_homework_template,
+                            "homework_url": edited_homework_url,
+                        }
+
+                        supabase.table("lessons").update(updated_lesson).eq(
+                            "id",
+                            int(lesson_id_to_edit)
+                        ).eq(
+                            "user_id",
+                            user_id
+                        ).execute()
+
+                        st.session_state["edit_lesson_form_version"] += 1
+
+                        st.success(t("lesson_updated_successfully"))
+                        st.rerun()
+                    
+        st.subheader(t("archive_lesson"))
+
+        if active_lessons.empty:
+            st.info(t("no_active_lessons_to_archive"))
+        else:
+            course_titles = dict(zip(courses["id"], courses["title"]))
+
+            archive_lesson_options = {}
+
+            for _, row in active_lessons.iterrows():
+                course_name = course_titles.get(
+                    row["course_id"],
+                    t("unknown_course"),
+                )
+                label = f"{row['id']} — {row['title']} ({course_name})"
+                archive_lesson_options[label] = int(row["id"])
+
+            with st.form("archive_lesson_form"):
+                lesson_to_archive = st.selectbox(
+                    t("select_lesson_to_archive"),
+                    list(archive_lesson_options.keys()),
+                    key="archive_lesson_select",
+                )
+
+                confirm_archive_lesson = st.checkbox(
+                    t("confirm_archive_lesson")
+                )
+
+                archive_lesson_submitted = st.form_submit_button(
+                    t("archive_lesson")
+                )
+
+                if archive_lesson_submitted:
+                    if not confirm_archive_lesson:
+                        st.error(t("please_confirm_archiving"))
+                    else:
+                        lesson_id_to_archive = archive_lesson_options[lesson_to_archive]
+
+                        supabase.table("lessons").update(
+                            {"is_archived": True}
+                        ).eq(
+                            "id",
+                            int(lesson_id_to_archive)
+                        ).eq(
+                            "user_id",
+                            user_id
+                        ).execute()
+
+                        st.success(t("lesson_archived_successfully"))
+                        st.rerun()
+                
+        st.subheader(t("archived_lessons"))
+
+        archived_lessons = lessons[lessons["is_archived"] == True].copy()
+
+        if archived_lessons.empty:
+            st.info(t("no_archived_lessons_yet"))
+        else:
+            course_titles = dict(zip(courses["id"], courses["title"]))
+
+            archived_lessons["course"] = archived_lessons["course_id"].map(course_titles)
+
+            archived_lessons_view = archived_lessons[
+                ["course", "title"]
+            ]
+
+            st.dataframe(
+                archived_lessons_view,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "course": st.column_config.TextColumn(
+                        t("course"),
+                        width="medium",
+                    ),
+                    "title": st.column_config.TextColumn(
+                        t("title"),
+                        width="large",
+                    ),
+                }
+            )
         
-        assignment_draft = {}
+        st.subheader(t("restore_lesson"))
 
-        if selected_lesson_id is not None:
-            assignment_draft_response = (
-                supabase.table("assignment_drafts")
-                .select("*")
-                .eq("user_id", user_id)
-                .eq("student_id", selected_student_id)
-                .eq("lesson_id", selected_lesson_id)
-                .limit(1)
-                .execute()
+        archived_lessons = lessons[lessons["is_archived"] == True].copy()
+
+        if archived_lessons.empty:
+            st.info(t("no_archived_lessons_to_restore"))
+        else:
+            course_titles = dict(zip(courses["id"], courses["title"]))
+
+            restore_lesson_options = {}
+
+            for _, row in archived_lessons.iterrows():
+                course_name = course_titles.get(
+                    row["course_id"],
+                    t("unknown_course"),
+                )
+                label = f"{row['id']} — {row['title']} ({course_name})"
+                restore_lesson_options[label] = int(row["id"])
+
+            with st.form("restore_lesson_form"):
+                lesson_to_restore = st.selectbox(
+                    t("select_lesson_to_restore"),
+                    list(restore_lesson_options.keys()),
+                    key="restore_lesson_select",
+                )
+
+                confirm_restore_lesson = st.checkbox(
+                    t("confirm_restore_lesson")
+                )
+
+                restore_lesson_submitted = st.form_submit_button(
+                    t("restore_lesson")
+                )
+
+                if restore_lesson_submitted:
+                    if not confirm_restore_lesson:
+                        st.error(t("please_confirm_restore"))
+                    else:
+                        lesson_id_to_restore = restore_lesson_options[lesson_to_restore]
+
+                        supabase.table("lessons").update(
+                            {"is_archived": False}
+                        ).eq(
+                            "id",
+                            int(lesson_id_to_restore)
+                        ).eq(
+                            "user_id",
+                            user_id
+                        ).execute()
+
+                        st.success(t("lesson_restored_successfully"))
+                        st.rerun()
+
+        st.subheader(t("delete_archived_lesson"))
+
+        archived_lessons_to_delete = lessons[
+            lessons["is_archived"] == True
+        ].copy()
+
+        if archived_lessons_to_delete.empty:
+            st.info(t("no_archived_lessons_to_delete"))
+
+        else:
+            course_titles = dict(
+                zip(courses["id"], courses["title"])
             )
 
-            assignment_draft = (
-                assignment_draft_response.data[0]
-                if assignment_draft_response.data
-                else {}
+            delete_archived_lesson_options = {}
+
+            for _, row in archived_lessons_to_delete.iterrows():
+                course_name = course_titles.get(
+                    row["course_id"],
+                    t("unknown_course"),
+                )
+
+                label = (
+                    f"{row['id']} — {row['title']} "
+                    f"({course_name})"
+                )
+
+                delete_archived_lesson_options[label] = int(row["id"])
+
+            with st.form("delete_archived_lesson_form"):
+                lesson_to_delete = st.selectbox(
+                    t("select_archived_lesson_to_delete"),
+                    list(delete_archived_lesson_options.keys()),
+                    key="delete_archived_lesson_select",
+                )
+
+                confirm_delete_archived_lesson = st.checkbox(
+                    t("confirm_delete_archived_lesson")
+                )
+
+                delete_archived_lesson_submitted = (
+                    st.form_submit_button(
+                        t("delete_archived_lesson")
+                    )
+                )
+
+                if delete_archived_lesson_submitted:
+                    if not confirm_delete_archived_lesson:
+                        st.error(
+                            t("please_confirm_lesson_deletion")
+                        )
+
+                    else:
+                        lesson_id_to_delete = (
+                            delete_archived_lesson_options[
+                                lesson_to_delete
+                            ]
+                        )
+
+                        supabase.table("assignments").delete().eq(
+                            "lesson_id",
+                            int(lesson_id_to_delete),
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        supabase.table("progress").delete().eq(
+                            "lesson_id",
+                            int(lesson_id_to_delete),
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        supabase.table("lessons").delete().eq(
+                            "id",
+                            int(lesson_id_to_delete),
+                        ).eq(
+                            "user_id",
+                            user_id,
+                        ).execute()
+
+                        st.success(
+                            t("archived_lesson_deleted_successfully")
+                        )
+
+                        st.rerun()
+    with assignments_tab:
+        st.header(t("assignments"))
+        
+        st.subheader(t("assignment_list"))
+    
+        assignments_view = assignments.copy()
+    
+        if assignments_view.empty:
+            st.info(t("no_assignments_yet"))
+    
+        else:
+            student_names = dict(zip(students["id"], students["name"]))
+            course_titles = dict(zip(courses["id"], courses["title"]))
+            lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+            lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+            lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
+    
+            assignments_view["student"] = assignments_view["student_id"].map(student_names)
+            assignments_view["course"] = assignments_view["course_id"].map(course_titles)
+            assignments_view["lesson"] = assignments_view["lesson_id"].map(lesson_titles)
+            assignments_view["lesson_date"] = assignments_view["lesson_id"].map(
+                lesson_dates
             )
-
-        if assignment_draft:
-            st.info(t("draft_restored"))
-
-        draft_homework = assignment_draft.get("homework") or ""
-
-        draft_status = assignment_draft.get("status") or "assigned"
-
-        draft_evaluation = (
-            assignment_draft.get("evaluation")
-            or "not evaluated"
-        )
-
-        draft_comments = assignment_draft.get("comments") or ""
-
-        assignment_statuses = [
-            "assigned",
-            "submitted",
-            "checked",
-            "needs revision",
-            "completed",
-        ]
-
-        evaluation_options = [
-            "not evaluated",
-            "excellent",
-            "good",
-            "satisfactory",
-            "needs improvement",
-        ]
-
-        draft_status_index = (
-            assignment_statuses.index(draft_status)
-            if draft_status in assignment_statuses
-            else 0
-        )
-
-        draft_evaluation_index = (
-            evaluation_options.index(draft_evaluation)
-            if draft_evaluation in evaluation_options
-            else 0
-        )
-
-        if "assignment_form_version" not in st.session_state:
-            st.session_state["assignment_form_version"] = 0
-
-        assignment_form_version = st.session_state["assignment_form_version"]
+    
+            assignments_view["start_time"] = assignments_view["lesson_id"].map(
+                lesson_times
+            )
+    
+            assignments_view = assignments_view.sort_values(
+                by=["lesson_date", "start_time", "student"],
+                ascending=[True, True, True],
+                na_position="last",
+            )
+    
+    
+            assignments_view["status"] = assignments_view["status"].apply(
+                lambda value: t(ASSIGNMENT_STATUS_TRANSLATION_KEYS[value])
+            )
+    
+            assignments_view["evaluation"] = assignments_view["evaluation"].apply(
+                lambda value: t(EVALUATION_TRANSLATION_KEYS[value])
+            )
+    
+            assignments_view = assignments_view[
+                ["student", "lesson", "status", "evaluation"]
+            ]
+    
+            st.dataframe(
+                assignments_view,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "student": st.column_config.TextColumn(
+                        t("student"),
+                        width="medium",
+                    ),
+                    "lesson": st.column_config.TextColumn(
+                        t("lesson"),
+                        width="large",
+                    ),
+                    "status": st.column_config.TextColumn(
+                        t("status"),
+                        width="small",
+                    ),
+                    "evaluation": st.column_config.TextColumn(
+                        t("evaluation"),
+                        width="medium",
+                    ),
+                },
+            )
             
-        with st.form(
-            f"add_assignment_form_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-            clear_on_submit=False,
-        ):
-            homework = st.text_area(
-                t("homework"),
-                value=draft_homework,
-                key=f"assignment_homework_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+        st.subheader(t("assignment_details"))
+    
+        if assignments.empty:
+            st.info(t("no_assignments_yet"))
+        else:
+            student_names = dict(zip(students["id"], students["name"]))
+            course_titles = dict(zip(courses["id"], courses["title"]))
+            lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+    
+            lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
+            lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
+    
+            assignment_details_view = assignments.copy()
+    
+            assignment_details_view["student"] = (
+                assignment_details_view["student_id"].map(student_names)
             )
-
-            status = st.selectbox(
-                t("assignment_status"),
-                assignment_statuses,
-                index=draft_status_index,
-                format_func=lambda value: t(
-                    ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
-                        value,
-                        value,
+    
+            assignment_details_view["lesson_date"] = (
+                assignment_details_view["lesson_id"].map(lesson_dates)
+            )
+    
+            assignment_details_view["start_time"] = (
+                assignment_details_view["lesson_id"].map(lesson_times)
+            )
+    
+            assignment_details_view = assignment_details_view.sort_values(
+                by=["lesson_date", "start_time", "student"],
+                ascending=[True, True, True],
+                na_position="last",
+            )
+            
+            for _, row in assignment_details_view.iterrows():
+                student_name = row["student"]
+    
+                course_name = course_titles.get(
+                    row["course_id"],
+                    t("unknown_course"),
+                )
+    
+                lesson_name = lesson_titles.get(
+                    row["lesson_id"],
+                    t("unknown_lesson"),
+                )
+                
+                with st.expander(f"{student_name} – {lesson_name}"):
+    
+                    st.write(
+                        f"**{t('student')}:** {student_name}"
                     )
-                ),
-                key=f"assignment_status_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-            )
-
-            evaluation = st.selectbox(
-                t("evaluation"),
-                evaluation_options,
-                index=draft_evaluation_index,
-                format_func=lambda value: t(
-                    EVALUATION_TRANSLATION_KEYS[value]
-                ),
-                key=f"assignment_evaluation_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-            )
-
-            comments = st.text_area(
-                t("teacher_comments"),
-                value=draft_comments,
-                key=f"assignment_comments_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-            )
-
-            save_assignment_draft_col, add_assignment_col, delete_assignment_draft_col = st.columns(
-                [1, 1, 1],
-                gap="small",
-            )
-
-            with save_assignment_draft_col:
-                assignment_draft_submitted = st.form_submit_button(
-                    t("save_draft"),
-                    key=f"save_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-                    width="stretch",
-                )
-
-            with add_assignment_col:
-                assignment_submitted = st.form_submit_button(
-                    t("add_assignment"),
-                    key=f"add_assignment_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-                    width="stretch",
-                )
-
-            with delete_assignment_draft_col:
-                delete_assignment_draft_submitted = st.form_submit_button(
-                    t("delete_draft"),
-                    key=f"delete_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
-                    width="stretch",
-                )
-
-            if assignment_draft_submitted:
-                if selected_lesson_id is None:
-                    st.error(t("add_lesson_for_course_first"))
-                else:
-                    assignment_draft_data = {
-                        "user_id": user_id,
-                        "student_id": selected_student_id,
-                        "course_id": int(selected_course_id),
-                        "lesson_id": selected_lesson_id,
-                        "homework": homework,
-                        "status": status,
-                        "evaluation": evaluation,
-                        "comments": comments,
-                    }
-
-                    supabase.table("assignment_drafts").upsert(
-                        assignment_draft_data,
-                        on_conflict="user_id,student_id,lesson_id",
-                    ).execute()
-
-                    st.success(t("draft_saved"))
-
-            elif delete_assignment_draft_submitted:
-                if selected_lesson_id is not None:
-                    supabase.table("assignment_drafts").delete().eq(
-                        "user_id",
-                        user_id,
-                    ).eq(
-                        "student_id",
-                        selected_student_id,
-                    ).eq(
-                        "lesson_id",
-                        selected_lesson_id,
-                    ).execute()
-
-                st.session_state["assignment_form_version"] += 1
-                st.success(t("draft_deleted"))
-                st.rerun()
-
-            elif assignment_submitted:
-                if selected_lesson is None:
-                    st.error(t("add_lesson_for_course_first"))
-
-                elif homework.strip() == "":
-                    st.error(t("please_enter_homework_task"))
-
-                else:
-                    new_assignment = {
-                        "user_id": user_id,
-                        "student_id": selected_student_id,
-                        "course_id": int(selected_course_id),
-                        "lesson_id": selected_lesson_id,
-                        "homework": homework,
-                        "status": status,
-                        "evaluation": evaluation,
-                        "comments": comments,
-                    }
-
-                    supabase.table("assignments").insert(
-                        new_assignment
-                    ).execute()
-
-                    supabase.table("assignment_drafts").delete().eq(
-                        "user_id",
-                        user_id,
-                    ).eq(
-                        "student_id",
-                        selected_student_id,
-                    ).eq(
-                        "lesson_id",
-                        selected_lesson_id,
-                    ).execute()
-
-                    st.session_state["assignment_form_version"] += 1
-
-                    st.success(t("assignment_added_successfully"))
-                    st.rerun()
-
-    st.subheader(t("edit_assignment"))
-
-    if assignments.empty:
-        st.info(t("no_assignments_to_edit"))
-
-    else:
-        student_names = dict(zip(students["id"], students["name"]))
-        course_titles = dict(zip(courses["id"], courses["title"]))
-        lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-        edit_assignment_options = {}
-
-        for _, row in assignments.iterrows():
-            student_name = student_names.get(
-                row["student_id"],
-                t("unknown_student"),
-            )
-
-            lesson_name = lesson_titles.get(
-                row["lesson_id"],
-                t("unknown_lesson"),
-            )
-
-            assignment_status_label = t(
-                ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
-                    row["status"],
-                    row["status"],
-                )
-            )
-
-            label = (
-                f"{row['id']} — {student_name} — "
-                f"{lesson_name} ({assignment_status_label})"
-            )
-
-            edit_assignment_options[label] = int(row["id"])
-
-        selected_assignment_to_edit = st.selectbox(
-            t("select_assignment_to_edit"),
-            list(edit_assignment_options.keys()),
-            key="edit_assignment_select",
-        )
-
-        assignment_id_to_edit = edit_assignment_options[selected_assignment_to_edit]
-
-        assignment_row = assignments[
-            assignments["id"].astype(int) == int(assignment_id_to_edit)
-        ].iloc[0]
-
-        with st.form("edit_assignment_form"):
-            current_homework = assignment_row["homework"]
-            if pd.isna(current_homework):
-                current_homework = ""
-
-            edited_homework = st.text_area(
-                t("homework"),
-                value=current_homework,
-            )
-
-            assignment_statuses = ["assigned", "submitted", "checked", "needs revision", "completed"]
-
-            edited_status = st.selectbox(
-                t("assignment_status"),
-                assignment_statuses,
-                index=(
-                    assignment_statuses.index(assignment_row["status"])
-                    if assignment_row["status"] in assignment_statuses
-                    else 0
-                ),
-                format_func=lambda value: t(
-                    ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
-                        value,
-                        value,
+    
+                    st.write(
+                        f"**{t('course')}:** {course_name}"
                     )
-                ),
+    
+                    st.write(
+                        f"**{t('lesson')}:** {lesson_name}"
+                    )
+    
+                    st.write(
+                        f"**{t('homework')}:** {row['homework']}"
+                    )
+    
+                    st.write(
+                        f"**{t('status')}:** {row['status']}"
+                    )
+    
+                    st.write(
+                        f"**{t('evaluation')}:** {row['evaluation']}"
+                    )
+    
+                    st.write(
+                        f"**{t('teacher_comments')}:** {row['comments']}"
+                    )
+        
+        st.subheader(t("add_new_assignment"))
+    
+        if students.empty:
+            st.warning(t("add_student_before_assignments"))
+    
+        elif courses.empty:
+            st.warning(t("add_course_before_assignments"))
+    
+        elif lessons.empty:
+            st.warning(t("add_lesson_before_assignments"))
+    
+        else:
+    
+            student_options = {
+                student_label(row): int(row["id"])
+                for _, row in students.iterrows()
+            }
+    
+            course_options = {
+                f"{row['id']} – {row['title']} "
+                f"({row['target_language']} {row['level']} "
+                f"· taught in {row['instruction_language']})": int(row["id"])
+                for _, row in courses.iterrows()
+            }
+                
+            selected_student = st.selectbox(
+                t("student"),
+                list(student_options.keys()),
+                key="assignment_student",
             )
-
+    
+            selected_course = st.selectbox(
+                t("course"),
+                list(course_options.keys()),
+                key="assignment_course",
+            )
+                
+            selected_course_id = course_options[selected_course]
+    
+            selected_student_id = int(student_options[selected_student])
+    
+            filtered_lessons = active_lessons[
+                active_lessons["course_id"].astype(int) == int(selected_course_id)
+            ]
+    
+            if filtered_lessons.empty:
+                st.warning(t("course_has_no_lessons"))
+                selected_lesson = None
+                lesson_options = {}
+            else:
+                lesson_options = {
+                    f"{row['id']} — {row['title']}": int(row["id"])
+                    for _, row in filtered_lessons.iterrows()
+                }
+            
+                selected_lesson = st.selectbox(
+                    t("lesson"),
+                    list(lesson_options.keys()),
+                    key="assignment_lesson",
+                )
+            selected_lesson_id = (
+                int(lesson_options[selected_lesson])
+                if selected_lesson is not None
+                else None
+            )
+            
+            assignment_draft = {}
+    
+            if selected_lesson_id is not None:
+                assignment_draft_response = (
+                    supabase.table("assignment_drafts")
+                    .select("*")
+                    .eq("user_id", user_id)
+                    .eq("student_id", selected_student_id)
+                    .eq("lesson_id", selected_lesson_id)
+                    .limit(1)
+                    .execute()
+                )
+    
+                assignment_draft = (
+                    assignment_draft_response.data[0]
+                    if assignment_draft_response.data
+                    else {}
+                )
+    
+            if assignment_draft:
+                st.info(t("draft_restored"))
+    
+            draft_homework = assignment_draft.get("homework") or ""
+    
+            draft_status = assignment_draft.get("status") or "assigned"
+    
+            draft_evaluation = (
+                assignment_draft.get("evaluation")
+                or "not evaluated"
+            )
+    
+            draft_comments = assignment_draft.get("comments") or ""
+    
+            assignment_statuses = [
+                "assigned",
+                "submitted",
+                "checked",
+                "needs revision",
+                "completed",
+            ]
+    
             evaluation_options = [
                 "not evaluated",
                 "excellent",
                 "good",
                 "satisfactory",
-                "needs improvement"
+                "needs improvement",
             ]
-
-            edited_evaluation = st.selectbox(
-                t("evaluation"),
-                evaluation_options,
-                index=(
-                    evaluation_options.index(assignment_row["evaluation"])
-                    if assignment_row["evaluation"] in evaluation_options
-                    else 0
-                ),
-                format_func=lambda value: t(
-                    EVALUATION_TRANSLATION_KEYS[value]
-                ),
+    
+            draft_status_index = (
+                assignment_statuses.index(draft_status)
+                if draft_status in assignment_statuses
+                else 0
             )
-
-            current_comments = assignment_row["comments"]
-            if pd.isna(current_comments):
-                current_comments = ""
-
-            edited_comments = st.text_area(
-                t("teacher_comments"),
-                value=current_comments,
+    
+            draft_evaluation_index = (
+                evaluation_options.index(draft_evaluation)
+                if draft_evaluation in evaluation_options
+                else 0
             )
-
-            edit_assignment_submitted = st.form_submit_button(
-                t("save_assignment_changes")
-            )
-
-            if edit_assignment_submitted:
-                if edited_homework.strip() == "":
-                    st.error(t("please_enter_homework_task"))
-                else:
-                    updated_assignment = {
-                        "homework": edited_homework,
-                        "status": edited_status,
-                        "evaluation": edited_evaluation,
-                        "comments": edited_comments,
-                    }
-
-                    supabase.table("assignments").update(updated_assignment).eq(
-                        "id",
-                        int(assignment_row["id"])
-                    ).eq(
-                        "user_id",
-                        user_id
-                    ).execute()
-
-                    st.success(t("assignment_updated_successfully"))
+    
+            if "assignment_form_version" not in st.session_state:
+                st.session_state["assignment_form_version"] = 0
+    
+            assignment_form_version = st.session_state["assignment_form_version"]
+                
+            with st.form(
+                f"add_assignment_form_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                clear_on_submit=False,
+            ):
+                homework = st.text_area(
+                    t("homework"),
+                    value=draft_homework,
+                    key=f"assignment_homework_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                )
+    
+                status = st.selectbox(
+                    t("assignment_status"),
+                    assignment_statuses,
+                    index=draft_status_index,
+                    format_func=lambda value: t(
+                        ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
+                            value,
+                            value,
+                        )
+                    ),
+                    key=f"assignment_status_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                )
+    
+                evaluation = st.selectbox(
+                    t("evaluation"),
+                    evaluation_options,
+                    index=draft_evaluation_index,
+                    format_func=lambda value: t(
+                        EVALUATION_TRANSLATION_KEYS[value]
+                    ),
+                    key=f"assignment_evaluation_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                )
+    
+                comments = st.text_area(
+                    t("teacher_comments"),
+                    value=draft_comments,
+                    key=f"assignment_comments_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                )
+    
+                save_assignment_draft_col, add_assignment_col, delete_assignment_draft_col = st.columns(
+                    [1, 1, 1],
+                    gap="small",
+                )
+    
+                with save_assignment_draft_col:
+                    assignment_draft_submitted = st.form_submit_button(
+                        t("save_draft"),
+                        key=f"save_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                        width="stretch",
+                    )
+    
+                with add_assignment_col:
+                    assignment_submitted = st.form_submit_button(
+                        t("add_assignment"),
+                        key=f"add_assignment_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                        width="stretch",
+                    )
+    
+                with delete_assignment_draft_col:
+                    delete_assignment_draft_submitted = st.form_submit_button(
+                        t("delete_draft"),
+                        key=f"delete_assignment_draft_button_{selected_student_id}_{selected_lesson_id}_{assignment_form_version}",
+                        width="stretch",
+                    )
+    
+                if assignment_draft_submitted:
+                    if selected_lesson_id is None:
+                        st.error(t("add_lesson_for_course_first"))
+                    else:
+                        assignment_draft_data = {
+                            "user_id": user_id,
+                            "student_id": selected_student_id,
+                            "course_id": int(selected_course_id),
+                            "lesson_id": selected_lesson_id,
+                            "homework": homework,
+                            "status": status,
+                            "evaluation": evaluation,
+                            "comments": comments,
+                        }
+    
+                        supabase.table("assignment_drafts").upsert(
+                            assignment_draft_data,
+                            on_conflict="user_id,student_id,lesson_id",
+                        ).execute()
+    
+                        st.success(t("draft_saved"))
+    
+                elif delete_assignment_draft_submitted:
+                    if selected_lesson_id is not None:
+                        supabase.table("assignment_drafts").delete().eq(
+                            "user_id",
+                            user_id,
+                        ).eq(
+                            "student_id",
+                            selected_student_id,
+                        ).eq(
+                            "lesson_id",
+                            selected_lesson_id,
+                        ).execute()
+    
+                    st.session_state["assignment_form_version"] += 1
+                    st.success(t("draft_deleted"))
                     st.rerun()
-
-    st.subheader(t("delete_assignment"))
-
-    if assignments.empty:
-        st.info(t("no_assignments_to_delete"))
-    else:
-        student_names = dict(zip(students["id"], students["name"]))
-        lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-        delete_assignment_options = {}
-
-        for _, row in assignments.iterrows():
-            student_name = student_names.get(
-                row["student_id"],
-                t("unknown_student"),
-            )
-
-            lesson_name = lesson_titles.get(
-                row["lesson_id"],
-                t("unknown_lesson"),
-            )
-
-            label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
-            delete_assignment_options[label] = row["id"]
-
-        with st.form("delete_assignment_form"):
-            assignment_to_delete = st.selectbox(
-                t("select_assignment_to_delete"),
-                list(delete_assignment_options.keys()),
-                key="delete_assignment_select",
-            )
-
-            confirm_delete_assignment = st.checkbox(
-                t("confirm_delete_assignment")
-            )
-
-            delete_assignment_submitted = st.form_submit_button(
-                t("delete_assignment")
-            )
-
-            if delete_assignment_submitted:
-                if not confirm_delete_assignment:
-                    st.error(t("please_confirm_deletion"))
-                else:
-                    assignment_id_to_delete = delete_assignment_options[assignment_to_delete]
-
-                    supabase.table("assignments").delete().eq(
-                        "id",
-                        int(assignment_id_to_delete)
-                    ).eq(
-                        "user_id",
-                        user_id
-                    ).execute()
-
-                    st.success(t("assignment_deleted_successfully"))
-                    st.rerun()
-
-# elif page == "Progress":
-#     st.header(t("progress"))
-
-#     progress_view = progress.copy()
-
-#     st.subheader(t("progress_overview"))
-
-#     if progress_view.empty:
-#         st.info(t("no_progress_records_yet"))
-
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         course_titles = dict(zip(courses["id"], courses["title"]))
-#         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-#         lesson_dates = dict(zip(lessons["id"], lessons["lesson_date"]))
-#         lesson_times = dict(zip(lessons["id"], lessons["start_time"]))
-
-#         progress_view["student"] = progress_view["student_id"].map(student_names)
-#         progress_view["course"] = progress_view["course_id"].map(course_titles)
-#         progress_view["lesson"] = progress_view["lesson_id"].map(lesson_titles)
-#         progress_view["lesson_date"] = progress_view["lesson_id"].map(
-#             lesson_dates
-#         )
-
-#         progress_view["start_time"] = progress_view["lesson_id"].map(
-#             lesson_times
-#         )
-
-#         progress_view = progress_view.sort_values(
-#             by=["lesson_date", "start_time", "student"],
-#             ascending=[True, True, True],
-#             na_position="last",
-#         )
-
-#         progress_view["status"] = progress_view["status"].apply(
-#             lambda value: t(
-#                 PROGRESS_STATUS_TRANSLATION_KEYS.get(
-#                     value,
-#                     value,
-#                 )
-#             )
-#         )
-
-#         progress_view = progress_view[
-#             ["student", "course", "lesson", "status"]
-#         ]
-
-#         st.dataframe(
-#             progress_view,
-#             width="stretch",
-#             hide_index=True,
-#             column_config={
-#                 "student": st.column_config.TextColumn(
-#                     t("student"),
-#                     width="medium",
-#                 ),
-#                 "course": st.column_config.TextColumn(
-#                     t("course"),
-#                     width="medium",
-#                 ),
-#                 "lesson": st.column_config.TextColumn(
-#                     t("lesson"),
-#                     width="large",
-#                 ),
-#                 "status": st.column_config.TextColumn(
-#                     t("status"),
-#                     width="small",
-#                 ),
-#             },
-#         )
-
-#     st.subheader(t("progress_details"))
-
-#     if progress.empty:
-#         st.info(t("no_progress_records_yet"))
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         course_titles = dict(zip(courses["id"], courses["title"]))
-#         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-#         for _, row in progress.iterrows():
-#             student_name = student_names.get(row["student_id"], "Unknown student")
-#             course_name = course_titles.get(row["course_id"], "Unknown course")
-#             lesson_name = lesson_titles.get(row["lesson_id"], "Unknown lesson")
-
-#             teacher_comment = row["teacher_comment"]
-
-#             if pd.isna(teacher_comment) or str(teacher_comment).strip() == "":
-#                 teacher_comment = t("no_comments_yet")
-
-#             with st.expander(f"{student_name} – {lesson_name}"):
-#                 st.write(
-#                     f"**{t('student')}:** {student_name}"
-#                 )
-#                 st.write(
-#                     f"**{t('course')}:** {course_name}"
-#                 )
-#                 st.write(
-#                     f"**{t('lesson')}:** {lesson_name}"
-#                 )
-#                 st.write(
-#                     f"**{t('status')}:** {row['status']}"
-#                 )
-#                 st.write(
-#                     f"**{t('teacher_comment')}:** {teacher_comment}"
-#                 )
-
-#     st.subheader(t("add_progress_record"))
-
-#     if students.empty:
-#         st.warning(t("add_student_before_progress"))
-
-#     elif courses.empty:
-#         st.warning(t("add_course_before_progress"))
-
-#     elif lessons.empty:
-#         st.warning(t("add_lesson_before_progress"))
-
-#     else:
-
-#         student_options = {
-#             student_label(row): int(row["id"])
-#             for _, row in students.iterrows()
-#         }
-
-#         course_options = {
-#             course_label(row): int(row["id"])
-#             for _, row in courses.iterrows()
-#         }
-
-#         selected_student = st.selectbox(
-#             t("student"),
-#             list(student_options.keys()),
-#             key="progress_student",
-#         )
-
-#         selected_course = st.selectbox(
-#             t("course"),
-#             list(course_options.keys()),
-#             key="progress_course",
-#         )
-
-#         selected_course_id = course_options[selected_course]
-
-#         selected_student_id = int(student_options[selected_student])
-
-#         filtered_lessons = active_lessons[
-#             active_lessons["course_id"].astype(int) == int(selected_course_id)
-#         ]
-
-#         if filtered_lessons.empty:
-#             st.warning(t("course_has_no_lessons"))
-#             selected_lesson = None
-#             lesson_options = {}
-#         else:
-#             lesson_options = {
-#                 f"{row['id']} — {row['title']}": int(row["id"])
-#                 for _, row in filtered_lessons.iterrows()
-#             }
-
-#             selected_lesson = st.selectbox(
-#                 t("lesson"),
-#                 list(lesson_options.keys()),
-#                 key="progress_lesson",
-#             )
-#         selected_lesson_id = (
-#             int(lesson_options[selected_lesson])
-#             if selected_lesson is not None
-#             else None
-#         )
-
-#         progress_draft = {}
-
-#         if selected_lesson_id is not None:
-#             progress_draft_response = (
-#                 supabase.table("progress_drafts")
-#                 .select("*")
-#                 .eq("user_id", user_id)
-#                 .eq("student_id", selected_student_id)
-#                 .eq("lesson_id", selected_lesson_id)
-#                 .limit(1)
-#                 .execute()
-#             )
-
-#             progress_draft = (
-#                 progress_draft_response.data[0]
-#                 if progress_draft_response.data
-#                 else {}
-#             )
-
-#         if progress_draft:
-#             st.info(t("draft_restored"))
-
-#         draft_progress_status = (
-#             progress_draft.get("status")
-#             or "not started"
-#         )
-
-#         draft_teacher_comment = (
-#             progress_draft.get("teacher_comment")
-#             or ""
-#         )
-
-#         progress_statuses = [
-#             "not started",
-#             "in progress",
-#             "completed",
-#         ]
-
-#         draft_progress_status_index = (
-#             progress_statuses.index(draft_progress_status)
-#             if draft_progress_status in progress_statuses
-#             else 0
-#         )
-
-#         if "progress_form_version" not in st.session_state:
-#             st.session_state["progress_form_version"] = 0
-
-#         progress_form_version = st.session_state["progress_form_version"]
-
-#         with st.form(
-#             f"add_progress_form_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#             clear_on_submit=False,
-#         ):
-#             status = st.selectbox(
-#                 t("progress_status"),
-#                 progress_statuses,
-#                 index=draft_progress_status_index,
-#                 key=f"progress_status_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#                 format_func=lambda value: t(
-#                     PROGRESS_STATUS_TRANSLATION_KEYS.get(
-#                         value,
-#                         value,
-#                     )
-#                 ),
-#             )
-
-#             teacher_comment = st.text_area(
-#                 t("teacher_comment"),
-#                 value=draft_teacher_comment,
-#                 key=f"progress_teacher_comment_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#             )
-
-#             save_progress_draft_col, add_progress_col, delete_progress_draft_col = st.columns(
-#                 [1, 1, 1],
-#                 gap="small",
-#             )
-
-#             with save_progress_draft_col:
-#                 progress_draft_submitted = st.form_submit_button(
-#                     t("save_draft"),
-#                     key=f"save_progress_draft_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#                     width="stretch",
-#                 )
-
-#             with add_progress_col:
-#                 progress_submitted = st.form_submit_button(
-#                     t("add_progress"),
-#                     key=f"add_progress_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#                     width="stretch",
-#                 )
-
-#             with delete_progress_draft_col:
-#                 delete_progress_draft_submitted = st.form_submit_button(
-#                     t("delete_draft"),
-#                     key=f"delete_progress_draft_button_{selected_student_id}_{selected_lesson_id}_{progress_form_version}",
-#                     width="stretch",
-#                 )
-
-#             if progress_draft_submitted:
-#                 if selected_lesson_id is None:
-#                     st.error(t("add_lesson_for_progress_first"))
-#                 else:
-#                     progress_draft_data = {
-#                         "user_id": user_id,
-#                         "student_id": selected_student_id,
-#                         "course_id": int(selected_course_id),
-#                         "lesson_id": selected_lesson_id,
-#                         "status": status,
-#                         "teacher_comment": teacher_comment,
-#                     }
-
-#                     supabase.table("progress_drafts").upsert(
-#                         progress_draft_data,
-#                         on_conflict="user_id,student_id,lesson_id",
-#                     ).execute()
-
-#                     st.success(t("draft_saved"))
-
-#             elif delete_progress_draft_submitted:
-#                 if selected_lesson_id is not None:
-#                     supabase.table("progress_drafts").delete().eq(
-#                         "user_id",
-#                         user_id,
-#                     ).eq(
-#                         "student_id",
-#                         selected_student_id,
-#                     ).eq(
-#                         "lesson_id",
-#                         selected_lesson_id,
-#                     ).execute()
-
-#                 st.session_state["progress_form_version"] += 1
-#                 st.success(t("draft_deleted"))
-#                 st.rerun()
-
-#             elif progress_submitted:
-#                 if selected_lesson_id is None:
-#                     st.error(t("add_lesson_for_progress_first"))
-
-#                 else:
-#                     new_progress = {
-#                         "user_id": user_id,
-#                         "student_id": selected_student_id,
-#                         "course_id": int(selected_course_id),
-#                         "lesson_id": selected_lesson_id,
-#                         "status": status,
-#                         "teacher_comment": teacher_comment,
-#                     }
-
-#                     supabase.table("progress").insert(
-#                         new_progress
-#                     ).execute()
-
-#                     supabase.table("progress_drafts").delete().eq(
-#                         "user_id",
-#                         user_id,
-#                     ).eq(
-#                         "student_id",
-#                         selected_student_id,
-#                     ).eq(
-#                         "lesson_id",
-#                         selected_lesson_id,
-#                     ).execute()
-
-#                     st.session_state["progress_form_version"] += 1
-
-#                     st.success(t("progress_added_successfully"))
-#                     st.rerun()
     
-#     st.subheader(t("edit_progress_record"))
-
-#     if progress.empty:
-#         st.info(t("no_progress_records_to_edit"))
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         course_titles = dict(zip(courses["id"], courses["title"]))
-#         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-#         edit_progress_options = {}
-
-#         for _, row in progress.iterrows():
-#             student_name = student_names.get(
-#                 row["student_id"],
-#                 t("unknown_student"),
-#             )
-
-#             lesson_name = lesson_titles.get(
-#                 row["lesson_id"],
-#                 t("unknown_lesson"),
-#             )
-
-#             label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
-#             edit_progress_options[label] = int(row["id"])
-
-#         selected_progress_to_edit = st.selectbox(
-#             t("select_progress_record_to_edit"),
-#             list(edit_progress_options.keys()),
-#             key="edit_progress_select",
-#         )
-
-#         progress_id_to_edit = edit_progress_options[selected_progress_to_edit]
-
-#         progress_row = progress[
-#             progress["id"].astype(int) == int(progress_id_to_edit)
-#         ].iloc[0]
-
-#         with st.form("edit_progress_form"):
-#             progress_statuses = [
-#                 "not started",
-#                 "in progress",
-#                 "completed",
-#             ]
-
-#             edited_progress_status = st.selectbox(
-#                 t("progress_status"),
-#                 progress_statuses,
-#                 index=(
-#                     progress_statuses.index(progress_row["status"])
-#                     if progress_row["status"] in progress_statuses
-#                     else 0
-#                 ),
-#                 format_func=lambda value: t(
-#                     PROGRESS_STATUS_TRANSLATION_KEYS.get(
-#                         value,
-#                         value,
-#                     )
-#                 ),
-#             )
-#             current_teacher_comment = progress_row["teacher_comment"]
-
-#             if pd.isna(current_teacher_comment):
-#                 current_teacher_comment = ""
-
-#             edited_teacher_comment = st.text_area(
-#                 t("teacher_comment"),
-#                 value=current_teacher_comment,
-#             )
-
-#             edit_progress_submitted = st.form_submit_button(
-#                 t("save_progress_changes")
-#             )
-
-#             if edit_progress_submitted:
-#                 updated_progress = {
-#                     "status": edited_progress_status,
-#                     "teacher_comment": edited_teacher_comment,
-#                 }
-
-#                 supabase.table("progress").update(updated_progress).eq(
-#                     "id",
-#                     int(progress_row["id"])
-#                 ).eq(
-#                     "user_id",
-#                     user_id
-#                 ).execute()
-
-#                 st.success(t("progress_updated_successfully"))
-#                 st.rerun()
-
-#     st.subheader(t("delete_progress_record"))
-
-#     if progress.empty:
-#         st.info(t("no_progress_records_to_delete"))
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         lesson_titles = dict(zip(lessons["id"], lessons["title"]))
-
-#         delete_progress_options = {}
-
-#         for _, row in progress.iterrows():
-#             student_name = student_names.get(
-#                 row["student_id"],
-#                 t("unknown_student"),
-#             )
-
-#             lesson_name = lesson_titles.get(
-#                 row["lesson_id"],
-#                 t("unknown_lesson"),
-#             )
-
-#             label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
-#             delete_progress_options[label] = row["id"]
-
-#         with st.form("delete_progress_form"):
-#             progress_to_delete = st.selectbox(
-#                 t("select_progress_record_to_delete"),
-#                 list(delete_progress_options.keys()),
-#                 key="delete_progress_select",
-#             )
-
-#             confirm_delete_progress = st.checkbox(
-#                 t("confirm_delete_progress")
-#             )
-
-#             delete_progress_submitted = st.form_submit_button(
-#                 t("delete_progress_record")
-#             )
-
-#             if delete_progress_submitted:
-#                 if not confirm_delete_progress:
-#                     st.error(t("please_confirm_deletion"))
-#                 else:
-#                     progress_id_to_delete = delete_progress_options[progress_to_delete]
-
-#                     supabase.table("progress").delete().eq(
-#                         "id",
-#                         int(progress_id_to_delete)
-#                     ).eq(
-#                         "user_id",
-#                         user_id
-#                     ).execute()
-
-#                     st.success(t("progress_record_deleted_successfully"))
-#                     st.rerun()
-
-# elif page == "Student Skills":
-#     st.header(t("student_skills"))
+                elif assignment_submitted:
+                    if selected_lesson is None:
+                        st.error(t("add_lesson_for_course_first"))
     
-#     student_skills_view = student_skills.copy()
+                    elif homework.strip() == "":
+                        st.error(t("please_enter_homework_task"))
     
-#     if not student_skills_view.empty and not students.empty:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         student_skills_view["student"] = student_skills_view["student_id"].map(student_names)
-
-#         student_skills_view = student_skills_view.sort_values(
-#             by="student",
-#             ascending=True,
-#             key=lambda column: column.astype(str).str.casefold(),
-#         )
+                    else:
+                        new_assignment = {
+                            "user_id": user_id,
+                            "student_id": selected_student_id,
+                            "course_id": int(selected_course_id),
+                            "lesson_id": selected_lesson_id,
+                            "homework": homework,
+                            "status": status,
+                            "evaluation": evaluation,
+                            "comments": comments,
+                        }
     
-#         student_skills_view = student_skills_view[
-#             ["student", "listening", "reading", "speaking", "writing"]
-#         ]
-        
-#         st.subheader(t("skills_overview"))
-#         st.dataframe(
-#             student_skills_view,
-#             width="stretch",
-#             hide_index=True,
-#             column_config={
-#                 "student": st.column_config.TextColumn(
-#                     t("student"),
-#                     width="medium",
-#                 ),
-#                 "listening": st.column_config.NumberColumn(
-#                     t("listening"),
-#                     width="small",
-#                 ),
-#                 "reading": st.column_config.NumberColumn(
-#                     t("reading"),
-#                     width="small",
-#                 ),
-#                 "speaking": st.column_config.NumberColumn(
-#                     t("speaking"),
-#                     width="small",
-#                 ),
-#                 "writing": st.column_config.NumberColumn(
-#                     t("writing"),
-#                     width="small",
-#                 ),
-#             }
-#         )
-        
-#     st.subheader(t("skills_details"))
-
-#     if student_skills.empty:
-#         st.info(t("no_skill_records_yet"))
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-#         skill_columns = ["listening", "reading", "speaking", "writing", "grammar", "vocabulary"]
-
-#         student_skills_details_view = student_skills.copy()
-
-#         student_skills_details_view["student"] = (
-#             student_skills_details_view["student_id"].map(student_names)
-#         )
-
-#         student_skills_details_view = student_skills_details_view.sort_values(
-#             by="student",
-#             ascending=True,
-#             key=lambda column: column.astype(str).str.casefold(),
-#         )
-
-#         for _, row in student_skills_details_view.iterrows():
-#             student_name = row["student"]
-
-#             scores = {
-#                 skill: row[skill]
-#                 for skill in skill_columns
-#             }
-
-#             average_score = sum(scores.values()) / len(scores)
-#             strongest_skill = max(scores, key=scores.get)
-#             weakest_skill = min(scores, key=scores.get)
-
-#             with st.expander(
-#                 f"{student_name} – {t('skills_profile')}"
-#             ):
-#                 st.write(
-#                     f"**{t('student')}:** {student_name}"
-#                 )
-
-#                 st.write(
-#                     f"**{t('average_skill_score')}:** "
-#                     f"{average_score:.1f} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('strongest_skill')}:** "
-#                     f"{t(strongest_skill)} "
-#                     f"({scores[strongest_skill]}/5)"
-#                 )
-
-#                 st.write(
-#                     f"**{t('needs_focus')}:** "
-#                     f"{t(weakest_skill)} "
-#                     f"({scores[weakest_skill]}/5)"
-#                 )
-
-#                 st.write(
-#                     f"**{t('listening')}:** {row['listening']} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('reading')}:** {row['reading']} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('speaking')}:** {row['speaking']} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('writing')}:** {row['writing']} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('grammar')}:** {row['grammar']} / 5"
-#                 )
-
-#                 st.write(
-#                     f"**{t('vocabulary')}:** {row['vocabulary']} / 5"
-#                 )
-
-#                 comments = row["comments"]
-
-#                 if pd.isna(comments) or str(comments).strip() == "":
-#                     comments = t("no_comments_yet")
-
-#                 st.write(
-#                     f"**{t('comments')}:** {comments}"
-#                 )
-
-#     st.subheader(t("add_student_skills"))
-
-#     if students.empty:
-#         st.warning(t("add_student_before_skills"))
-
-#     else:
-#         student_options = {
-#             student_label(row): int(row["id"])
-#             for _, row in students.iterrows()
-#         }
-
-#         selected_student = st.selectbox(
-#             t("student"),
-#             list(student_options.keys()),
-#             key="skills_student_select",
-#         )
-
-#         selected_student_id = int(
-#             student_options[selected_student]
-#         )
-
-#         skill_draft_response = (
-#             supabase.table("skill_drafts")
-#             .select("*")
-#             .eq("user_id", user_id)
-#             .eq("student_id", selected_student_id)
-#             .limit(1)
-#             .execute()
-#         )
-
-#         skill_draft = (
-#             skill_draft_response.data[0]
-#             if skill_draft_response.data
-#             else {}
-#         )
-
-#         if skill_draft:
-#             st.info(t("draft_restored"))
-
-#         draft_listening = int(skill_draft.get("listening") or 3)
-#         draft_reading = int(skill_draft.get("reading") or 3)
-#         draft_speaking = int(skill_draft.get("speaking") or 3)
-#         draft_writing = int(skill_draft.get("writing") or 3)
-#         draft_grammar = int(skill_draft.get("grammar") or 3)
-#         draft_vocabulary = int(skill_draft.get("vocabulary") or 3)
-#         draft_comments = skill_draft.get("comments") or ""
-
-#         if "skills_form_version" not in st.session_state:
-#             st.session_state["skills_form_version"] = 0
-
-#         skills_form_version = st.session_state["skills_form_version"]
-
-#         with st.form(
-#             f"add_student_skills_form_{selected_student_id}_{skills_form_version}",
-#             clear_on_submit=False,
-#         ):
-#             listening = st.slider(
-#                 t("listening"),
-#                 1,
-#                 5,
-#                 draft_listening,
-#                 key=f"skills_listening_{selected_student_id}_{skills_form_version}",
-#             )
-#             reading = st.slider(
-#                 t("reading"),
-#                 1,
-#                 5,
-#                 draft_reading,
-#                 key=f"skills_reading_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             speaking = st.slider(
-#                 t("speaking"),
-#                 1,
-#                 5,
-#                 draft_speaking,
-#                 key=f"skills_speaking_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             writing = st.slider(
-#                 t("writing"),
-#                 1,
-#                 5,
-#                 draft_writing,
-#                 key=f"skills_writing_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             grammar = st.slider(
-#                 t("grammar"),
-#                 1,
-#                 5,
-#                 draft_grammar,
-#                 key=f"skills_grammar_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             vocabulary = st.slider(
-#                 t("vocabulary"),
-#                 1,
-#                 5,
-#                 draft_vocabulary,
-#                 key=f"skills_vocabulary_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             comments = st.text_area(
-#                 t("comments"),
-#                 value=draft_comments,
-#                 key=f"skills_comments_{selected_student_id}_{skills_form_version}",
-#             )
-
-#             save_skills_draft_col, add_skills_col, delete_skills_draft_col = st.columns(
-#                 [1, 1, 1],
-#                 gap="small",
-#             )
-
-#             with save_skills_draft_col:
-#                 skills_draft_submitted = st.form_submit_button(
-#                     t("save_draft"),
-#                     key=f"save_skills_draft_button_{selected_student_id}_{skills_form_version}",
-#                     width="stretch",
-#                 )
-
-#             with add_skills_col:
-#                 skills_submitted = st.form_submit_button(
-#                     t("add_skills"),
-#                     key=f"add_skills_button_{selected_student_id}_{skills_form_version}",
-#                     width="stretch",
-#                 )
-
-#             with delete_skills_draft_col:
-#                 delete_skills_draft_submitted = st.form_submit_button(
-#                     t("delete_draft"),
-#                     key=f"delete_skills_draft_button_{selected_student_id}_{skills_form_version}",
-#                     width="stretch",
-#                 )
-
-#             if skills_draft_submitted:
-#                 skill_draft_data = {
-#                     "user_id": user_id,
-#                     "student_id": selected_student_id,
-#                     "listening": listening,
-#                     "reading": reading,
-#                     "speaking": speaking,
-#                     "writing": writing,
-#                     "grammar": grammar,
-#                     "vocabulary": vocabulary,
-#                     "comments": comments,
-#                 }
-
-#                 supabase.table("skill_drafts").upsert(
-#                     skill_draft_data,
-#                     on_conflict="user_id,student_id",
-#                 ).execute()
-
-#                 st.success(t("draft_saved"))
-
-#             elif delete_skills_draft_submitted:
-#                 supabase.table("skill_drafts").delete().eq(
-#                     "user_id",
-#                     user_id,
-#                 ).eq(
-#                     "student_id",
-#                     selected_student_id,
-#                 ).execute()
-
-#                 st.session_state["skills_form_version"] += 1
-
-#                 st.success(t("draft_deleted"))
-#                 st.rerun()
-
-#             elif skills_submitted:
-#                 existing_skill = student_skills[
-#                     student_skills["student_id"].astype(int)
-#                     == int(selected_student_id)
-#                 ]
-
-#                 if not existing_skill.empty:
-#                     st.error(t("student_already_has_skills_profile"))
-
-#                 else:
-#                     new_skill = {
-#                         "user_id": user_id,
-#                         "student_id": selected_student_id,
-#                         "listening": listening,
-#                         "reading": reading,
-#                         "speaking": speaking,
-#                         "writing": writing,
-#                         "grammar": grammar,
-#                         "vocabulary": vocabulary,
-#                         "comments": comments,
-#                     }
-
-#                     supabase.table("student_skills").insert(
-#                         new_skill
-#                     ).execute()
-
-#                     supabase.table("skill_drafts").delete().eq(
-#                         "user_id",
-#                         user_id,
-#                     ).eq(
-#                         "student_id",
-#                         selected_student_id,
-#                     ).execute()
-
-#                     st.session_state["skills_form_version"] += 1
-
-#                     st.success(t("student_skills_added_successfully"))
-#                     st.rerun()
-
-#     st.subheader(t("edit_student_skills"))
-
-#     if student_skills.empty:
-#         st.info(t("no_skills_records_to_edit"))
-#     else:
-#         student_names = dict(zip(students["id"], students["name"]))
-
-#         edit_skill_options = {}
-
-#         for _, row in student_skills.iterrows():
-#             student_name = student_names.get(
-#                 row["student_id"],
-#                 t("unknown_student"),
-#             )
-#             edit_skill_options[f"{row['id']} — {student_name}"] = int(row["id"])
-
-#         selected_skill_to_edit = st.selectbox(
-#             t("select_skills_record_to_edit"),
-#             list(edit_skill_options.keys()),
-#             key="edit_skills_select",
-#         )
-
-#         skill_id_to_edit = edit_skill_options[selected_skill_to_edit]
-
-#         skill_row = student_skills[
-#             student_skills["id"].astype(int) == int(skill_id_to_edit)
-#         ].iloc[0]
-
-#         with st.form("edit_student_skills_form"):
-#             edited_listening = st.slider(
-#                 t("listening"),
-#                 1,
-#                 5,
-#                 int(skill_row["listening"]),
-#                 key="edit_listening",
-#             )
-
-#             edited_reading = st.slider(
-#                 t("reading"),
-#                 1,
-#                 5,
-#                 int(skill_row["reading"]),
-#                 key="edit_reading",
-#             )
-
-#             edited_speaking = st.slider(
-#                 t("speaking"),
-#                 1,
-#                 5,
-#                 int(skill_row["speaking"]),
-#                 key="edit_speaking",
-#             )
-
-#             edited_writing = st.slider(
-#                 t("writing"),
-#                 1,
-#                 5,
-#                 int(skill_row["writing"]),
-#                 key="edit_writing",
-#             )
-
-#             edited_grammar = st.slider(
-#                 t("grammar"),
-#                 1,
-#                 5,
-#                 int(skill_row["grammar"]),
-#                 key="edit_grammar",
-#             )
-
-#             edited_vocabulary = st.slider(
-#                 t("vocabulary"),
-#                 1,
-#                 5,
-#                 int(skill_row["vocabulary"]),
-#                 key="edit_vocabulary",
-#             )
-
-#             current_comments = skill_row["comments"]
-#             if pd.isna(current_comments):
-#                 current_comments = ""
-
-#             edited_comments = st.text_area(
-#                 t("comments"),
-#                 value=current_comments,
-#                 key="edit_skills_comments",
-#             )
-
-#             edit_skills_submitted = st.form_submit_button(
-#                 t("update_skills")
-#             )
-            
-#             if edit_skills_submitted:
-#                 updated_skills = {
-#                     "listening": edited_listening,
-#                     "reading": edited_reading,
-#                     "speaking": edited_speaking,
-#                     "writing": edited_writing,
-#                     "grammar": edited_grammar,
-#                     "vocabulary": edited_vocabulary,
-#                     "comments": edited_comments,
-#                 }
-
-#                 supabase.table("student_skills").update(updated_skills).eq(
-#                     "id",
-#                     int(skill_row["id"])
-#                 ).eq(
-#                     "user_id",
-#                     user_id
-#                 ).execute()
-
-#                 st.success(t("student_skills_updated_successfully"))
-#                 st.rerun()
+                        supabase.table("assignments").insert(
+                            new_assignment
+                        ).execute()
+    
+                        supabase.table("assignment_drafts").delete().eq(
+                            "user_id",
+                            user_id,
+                        ).eq(
+                            "student_id",
+                            selected_student_id,
+                        ).eq(
+                            "lesson_id",
+                            selected_lesson_id,
+                        ).execute()
+    
+                        st.session_state["assignment_form_version"] += 1
+    
+                        st.success(t("assignment_added_successfully"))
+                        st.rerun()
+    
+        st.subheader(t("edit_assignment"))
+    
+        if assignments.empty:
+            st.info(t("no_assignments_to_edit"))
+    
+        else:
+            student_names = dict(zip(students["id"], students["name"]))
+            course_titles = dict(zip(courses["id"], courses["title"]))
+            lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+    
+            edit_assignment_options = {}
+    
+            for _, row in assignments.iterrows():
+                student_name = student_names.get(
+                    row["student_id"],
+                    t("unknown_student"),
+                )
+    
+                lesson_name = lesson_titles.get(
+                    row["lesson_id"],
+                    t("unknown_lesson"),
+                )
+    
+                assignment_status_label = t(
+                    ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
+                        row["status"],
+                        row["status"],
+                    )
+                )
+    
+                label = (
+                    f"{row['id']} — {student_name} — "
+                    f"{lesson_name} ({assignment_status_label})"
+                )
+    
+                edit_assignment_options[label] = int(row["id"])
+    
+            selected_assignment_to_edit = st.selectbox(
+                t("select_assignment_to_edit"),
+                list(edit_assignment_options.keys()),
+                key="edit_assignment_select",
+            )
+    
+            assignment_id_to_edit = edit_assignment_options[selected_assignment_to_edit]
+    
+            assignment_row = assignments[
+                assignments["id"].astype(int) == int(assignment_id_to_edit)
+            ].iloc[0]
+    
+            with st.form("edit_assignment_form"):
+                current_homework = assignment_row["homework"]
+                if pd.isna(current_homework):
+                    current_homework = ""
+    
+                edited_homework = st.text_area(
+                    t("homework"),
+                    value=current_homework,
+                )
+    
+                assignment_statuses = ["assigned", "submitted", "checked", "needs revision", "completed"]
+    
+                edited_status = st.selectbox(
+                    t("assignment_status"),
+                    assignment_statuses,
+                    index=(
+                        assignment_statuses.index(assignment_row["status"])
+                        if assignment_row["status"] in assignment_statuses
+                        else 0
+                    ),
+                    format_func=lambda value: t(
+                        ASSIGNMENT_STATUS_TRANSLATION_KEYS.get(
+                            value,
+                            value,
+                        )
+                    ),
+                )
+    
+                evaluation_options = [
+                    "not evaluated",
+                    "excellent",
+                    "good",
+                    "satisfactory",
+                    "needs improvement"
+                ]
+    
+                edited_evaluation = st.selectbox(
+                    t("evaluation"),
+                    evaluation_options,
+                    index=(
+                        evaluation_options.index(assignment_row["evaluation"])
+                        if assignment_row["evaluation"] in evaluation_options
+                        else 0
+                    ),
+                    format_func=lambda value: t(
+                        EVALUATION_TRANSLATION_KEYS[value]
+                    ),
+                )
+    
+                current_comments = assignment_row["comments"]
+                if pd.isna(current_comments):
+                    current_comments = ""
+    
+                edited_comments = st.text_area(
+                    t("teacher_comments"),
+                    value=current_comments,
+                )
+    
+                edit_assignment_submitted = st.form_submit_button(
+                    t("save_assignment_changes")
+                )
+    
+                if edit_assignment_submitted:
+                    if edited_homework.strip() == "":
+                        st.error(t("please_enter_homework_task"))
+                    else:
+                        updated_assignment = {
+                            "homework": edited_homework,
+                            "status": edited_status,
+                            "evaluation": edited_evaluation,
+                            "comments": edited_comments,
+                        }
+    
+                        supabase.table("assignments").update(updated_assignment).eq(
+                            "id",
+                            int(assignment_row["id"])
+                        ).eq(
+                            "user_id",
+                            user_id
+                        ).execute()
+    
+                        st.success(t("assignment_updated_successfully"))
+                        st.rerun()
+    
+        st.subheader(t("delete_assignment"))
+    
+        if assignments.empty:
+            st.info(t("no_assignments_to_delete"))
+        else:
+            student_names = dict(zip(students["id"], students["name"]))
+            lesson_titles = dict(zip(lessons["id"], lessons["title"]))
+    
+            delete_assignment_options = {}
+    
+            for _, row in assignments.iterrows():
+                student_name = student_names.get(
+                    row["student_id"],
+                    t("unknown_student"),
+                )
+    
+                lesson_name = lesson_titles.get(
+                    row["lesson_id"],
+                    t("unknown_lesson"),
+                )
+    
+                label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
+                delete_assignment_options[label] = row["id"]
+    
+            with st.form("delete_assignment_form"):
+                assignment_to_delete = st.selectbox(
+                    t("select_assignment_to_delete"),
+                    list(delete_assignment_options.keys()),
+                    key="delete_assignment_select",
+                )
+    
+                confirm_delete_assignment = st.checkbox(
+                    t("confirm_delete_assignment")
+                )
+    
+                delete_assignment_submitted = st.form_submit_button(
+                    t("delete_assignment")
+                )
+    
+                if delete_assignment_submitted:
+                    if not confirm_delete_assignment:
+                        st.error(t("please_confirm_deletion"))
+                    else:
+                        assignment_id_to_delete = delete_assignment_options[assignment_to_delete]
+    
+                        supabase.table("assignments").delete().eq(
+                            "id",
+                            int(assignment_id_to_delete)
+                        ).eq(
+                            "user_id",
+                            user_id
+                        ).execute()
+    
+                        st.success(t("assignment_deleted_successfully"))
+                        st.rerun()
