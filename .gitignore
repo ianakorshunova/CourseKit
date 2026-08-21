@@ -10,6 +10,7 @@ env/
 
 # Streamlit
 .streamlit/secrets.toml
+confirm_testers.py
 
 # System files
 .DS_Store
