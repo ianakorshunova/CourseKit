@@ -155,7 +155,7 @@ def student_label(row):
         level_label = t("not_specified")
 
     return (
-        f"{int(row['id'])} — {row['name']} "
+        f"{row['name']} "
         f"({language_label} {level_label})"
     )
 
@@ -219,7 +219,7 @@ def course_label(row):
     )
 
     return (
-        f"{int(row['id'])} — {row['title']} "
+        f"{row['title']} "
         f"({subject_label} · {level_label} · "
         f"{t('taught_in')} {instruction_language_label})"
     )
@@ -307,6 +307,7 @@ TRANSLATIONS = {
         "student": "Student",
         "unknown_student": "Unknown student",
         "not_specified": "Not specified",
+        "no_notes": "No notes yet.",
         "no_notes_yet": "No notes yet.",
 
         "skills_summary": "Skills summary",
@@ -827,6 +828,7 @@ TRANSLATIONS = {
         "student": "Ученик",
         "unknown_student": "Неизвестный ученик",
         "not_specified": "Не указано",
+        "no_notes": "Заметок пока нет.",
         "no_notes_yet": "Заметок пока нет.",
 
         "skills_summary": "Обзор навыков",
@@ -1389,6 +1391,7 @@ TRANSLATIONS = {
         "student": "学生",
         "unknown_student": "未知学生",
         "not_specified": "未填写",
+        "no_notes": "暂无备注。",
         "no_notes_yet": "暂无备注。",
 
         "skills_summary": "技能概览",
@@ -2073,6 +2076,7 @@ TABLE_COLUMNS = {
         "id",
         "user_id",
         "name",
+        "subject",
         "target_language",
         "level",
         "custom_level",
@@ -2139,6 +2143,7 @@ TABLE_COLUMNS = {
         "id",
         "user_id",
         "name",
+        "subject",
         "target_language",
         "level",
         "custom_level",
@@ -2665,8 +2670,19 @@ elif page == "Students":
         else t("not_specified")
     )
 
+    students_view["subject"] = students_view["subject"].apply(
+        lambda value: display_value(
+            value,
+            t("not_specified"),
+        )
+    )
+
     students_view["level"] = students_view["level"].apply(
-        lambda value: display_value(value, t("not_specified"))
+        lambda value: (
+            t("custom")
+            if value == "Custom"
+            else display_value(value, t("not_specified"))
+        )
     )
 
     students_view["status"] = students_view["status"].apply(
@@ -2682,7 +2698,7 @@ elif page == "Students":
     )
 
     students_view = students_view[
-        ["name", "target_language", "level", "status", "notes"]
+        ["name", "subject", "target_language", "level", "status", "notes"]
     ]
 
     st.dataframe(
@@ -2692,6 +2708,10 @@ elif page == "Students":
         column_config={
             "name": st.column_config.TextColumn(
                 t("student_name"),
+                width="medium",
+            ),
+            "subject": st.column_config.TextColumn(
+                t("subject"),
                 width="medium",
             ),
             "target_language": st.column_config.TextColumn(
@@ -2755,6 +2775,7 @@ elif page == "Students":
 
     draft_student_name = student_draft.get("name") or ""
     draft_student_notes = student_draft.get("notes") or ""
+    draft_student_subject = student_draft.get("subject") or ""
 
     draft_student_language = student_draft.get(
         "target_language",
@@ -2813,6 +2834,12 @@ elif page == "Students":
             t("student_name"),
             value=draft_student_name,
             key=f"student_name_{student_form_version}",
+        )
+
+        student_subject = st.text_input(
+            t("subject"),
+            value=draft_student_subject,
+            key=f"student_subject_{student_form_version}",
         )
 
         language = st.selectbox(
@@ -2885,6 +2912,7 @@ elif page == "Students":
             student_draft_data = {
                 "user_id": user_id,
                 "name": name,
+                "subject": student_subject.strip() or None,
                 "target_language": language,
                 "level": level,
                 "custom_level": custom_level if level == "Custom" else "",
@@ -2919,6 +2947,7 @@ elif page == "Students":
                 new_student = {
                     "user_id": user_id,
                     "name": name,
+                    "subject": student_subject.strip() or None,
                     "target_language": language,
                     "level": level,
                     "custom_level": custom_level if level == "Custom" else "",
@@ -2973,6 +3002,15 @@ elif page == "Students":
             edited_name = st.text_input(
                 t("student_name"),
                 value=student_row["name"],
+            )
+
+            edited_subject = st.text_input(
+                t("subject"),
+                value=display_value(
+                    student_row["subject"],
+                    "",
+                ),
+                key=f"edit_student_subject_{student_id_to_edit}_{edit_student_form_version}",
             )
 
             student_target_language = display_value(student_row["target_language"], "Other")
@@ -3077,6 +3115,7 @@ elif page == "Students":
             else:
                 updated_student = {
                     "name": edited_name,
+                    "subject": edited_subject.strip() or None,
                     "target_language": edited_target_language,
                     "level": edited_level,
                     "custom_level": (
@@ -3237,10 +3276,23 @@ elif page == "Students":
                         )
                     )
 
-                col2.metric(
-                    t("target_language"),
-                    student_language_label,
+                student_subject = student_row["subject"]
+
+                has_subject = (
+                    pd.notna(student_subject)
+                    and str(student_subject).strip() != ""
                 )
+
+                if has_subject:
+                    col2.metric(
+                        t("subject"),
+                        str(student_subject).strip(),
+                    )
+                else:
+                    col2.metric(
+                        t("target_language"),
+                        student_language_label,
+                    )
 
                 student_level = display_value(
                     student_row["level"],
@@ -3264,6 +3316,15 @@ elif page == "Students":
                     student_level_label,
                 )
 
+                if (
+                    has_subject
+                    and student_language
+                    and student_language != "Not applicable"
+                ):
+                    st.write(
+                        f"**{t('target_language')}:** {student_language_label}"
+                    )
+
                 student_status = display_value(
                     student_row["status"],
                     "",
@@ -3278,7 +3339,6 @@ elif page == "Students":
                     )
                 else:
                     student_status_label = t("not_specified")
-
                 st.write(
                     f"**{t('status')}:** {student_status_label}"
                 )
@@ -4552,7 +4612,7 @@ elif page == "Students":
                     lesson_options = {}
                 else:
                     lesson_options = {
-                        f"{row['id']} — {row['title']}": int(row["id"])
+                        f"{row['title']}": int(row["id"])
                         for _, row in filtered_lessons.iterrows()
                     }
 
@@ -4758,7 +4818,7 @@ elif page == "Students":
                         t("unknown_lesson"),
                     )
 
-                    label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
+                    label = f"{student_name} — {lesson_name} ({row['status']})"
                     edit_progress_options[label] = int(row["id"])
 
                 selected_progress_to_edit = st.selectbox(
@@ -4847,7 +4907,7 @@ elif page == "Students":
                         t("unknown_lesson"),
                     )
 
-                    label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
+                    label = f"{student_name} — {lesson_name} ({row['status']})"
                     delete_progress_options[label] = row["id"]
 
                 with st.form("delete_progress_form"):
@@ -5242,7 +5302,8 @@ elif page == "Students":
                         row["student_id"],
                         t("unknown_student"),
                     )
-                    edit_skill_options[f"{row['id']} — {student_name}"] = int(row["id"])
+
+                    edit_skill_options[f"{student_name}"] = int(row["id"])
 
                 selected_skill_to_edit = st.selectbox(
                     t("select_skills_record_to_edit"),
@@ -5836,7 +5897,7 @@ elif page == "Courses":
 
         for _, row in active_courses.iterrows():
             label = (
-                f"{row['id']} — {row['title']} "
+                f"{row['title']} "
                 f"({row['target_language']} {row['level']})"
             )
             archive_course_options[label] = int(row["id"])
@@ -6490,7 +6551,7 @@ elif page == "Lessons":
 
         else:
             lesson_options = {
-                f"{row['id']} — {row['title']}": int(row["id"])
+                f"{row['title']}": int(row["id"])
                 for _, row in lessons.iterrows()
             }
 
@@ -6657,7 +6718,8 @@ elif page == "Lessons":
                     row["course_id"],
                     t("unknown_course"),
                 )
-                label = f"{row['id']} — {row['title']} ({course_name})"
+
+                label = f"{row['title']} ({course_name})"
                 archive_lesson_options[label] = int(row["id"])
 
             with st.form("archive_lesson_form"):
@@ -6741,7 +6803,7 @@ elif page == "Lessons":
                     row["course_id"],
                     t("unknown_course"),
                 )
-                label = f"{row['id']} — {row['title']} ({course_name})"
+                label = f"{row['title']} ({course_name})"
                 restore_lesson_options[label] = int(row["id"])
 
             with st.form("restore_lesson_form"):
@@ -6801,7 +6863,7 @@ elif page == "Lessons":
                 )
 
                 label = (
-                    f"{row['id']} — {row['title']} "
+                    f"{row['title']} "
                     f"({course_name})"
                 )
 
@@ -7063,7 +7125,7 @@ elif page == "Lessons":
                 lesson_options = {}
             else:
                 lesson_options = {
-                    f"{row['id']} — {row['title']}": int(row["id"])
+                    f"{row['title']}": int(row["id"])
                     for _, row in filtered_lessons.iterrows()
                 }
             
@@ -7318,7 +7380,7 @@ elif page == "Lessons":
                 )
     
                 label = (
-                    f"{row['id']} — {student_name} — "
+                    f"{student_name} — "
                     f"{lesson_name} ({assignment_status_label})"
                 )
     
@@ -7441,7 +7503,7 @@ elif page == "Lessons":
                     t("unknown_lesson"),
                 )
     
-                label = f"{row['id']} — {student_name} — {lesson_name} ({row['status']})"
+                label = f"{student_name} — {lesson_name} ({row['status']})"
                 delete_assignment_options[label] = row["id"]
     
             with st.form("delete_assignment_form"):
